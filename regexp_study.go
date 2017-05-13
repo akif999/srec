@@ -6,7 +6,8 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
-	"regexp"
+	// "regexp"
+	"strings"
 )
 
 const ()
@@ -26,7 +27,7 @@ var (
 // TODO グループ化してマッチさせ、columnスプリットでフィールドを取り出す
 func main() {
 	kingpin.Parse()
-	re := regexp.MustCompile("S1")
+	// re := regexp.MustCompile("S1")
 
 	fp, err := os.Open(*filename)
 	if err != nil {
@@ -37,9 +38,16 @@ func main() {
 	scanner := bufio.NewScanner(fp)
 
 	for scanner.Scan() {
-		s := scanner.Text()
-		if re.MatchString(s) {
-			fmt.Println(s)
+		line := scanner.Text()
+		ss := strings.Split(line, "")
+		if (ss[0] == "S") && (ss[1] == "1") {
+			fmt.Println(ss)
 		}
 	}
+}
+
+func ParseSrec() {
+}
+
+func PrintOnlyData() {
 }
