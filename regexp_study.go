@@ -6,7 +6,7 @@ import (
 	"gopkg.in/alecthomas/kingpin.v2"
 	"log"
 	"os"
-	// "regexp"
+	"regexp"
 )
 
 const ()
@@ -17,7 +17,7 @@ var (
 
 func main() {
 	kingpin.Parse()
-	// re := regexp.MustCompile('.')
+	re := regexp.MustCompile("S1")
 
 	fp, err := os.Open(*filename)
 	if err != nil {
@@ -27,6 +27,9 @@ func main() {
 
 	scanner := bufio.NewScanner(fp)
 	for scanner.Scan() {
-		fmt.Println(scanner.Text())
+		s := scanner.Text()
+		if re.MatchString(s) {
+			fmt.Println(s)
+		}
 	}
 }
