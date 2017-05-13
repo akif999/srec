@@ -11,10 +11,19 @@ import (
 
 const ()
 
+type Srec struct {
+	srectype uint
+	length   uint32
+	address  uint32
+	data     []byte
+	checksum byte
+}
+
 var (
 	filename = kingpin.Arg("filename", "srec file").ExistingFile()
 )
 
+// TODO グループ化してマッチさせ、columnスプリットでフィールドを取り出す
 func main() {
 	kingpin.Parse()
 	re := regexp.MustCompile("S1")
@@ -26,6 +35,7 @@ func main() {
 	defer fp.Close()
 
 	scanner := bufio.NewScanner(fp)
+
 	for scanner.Scan() {
 		s := scanner.Text()
 		if re.MatchString(s) {
