@@ -4,20 +4,28 @@ import (
 	"bufio"
 	"fmt"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"log"
+	"os"
 	// "regexp"
 )
 
 const ()
 
 var (
-	file = kingpin.Arg("file", "srec file").ExistingFile()
+	filename = kingpin.Arg("filename", "srec file").ExistingFile()
 )
 
 func main() {
 	kingpin.Parse()
 	// re := regexp.MustCompile('.')
 
-	scanner := bufio.NewScanner(file)
+	fp, err := os.Open(*filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fp.Close()
+
+	scanner := bufio.NewScanner(fp)
 	for scanner.Scan() {
 		fmt.Println(scanner.Text())
 	}
