@@ -13,6 +13,10 @@ import (
 
 const ()
 
+type Srecs struct {
+	records []Srec
+}
+
 type Srec struct {
 	srectype string
 	length   uint32
@@ -27,11 +31,18 @@ var (
 
 // TODO グループ化してマッチさせ、columnスプリットでフィールドを取り出す
 func main() {
-	srec := new(Srec)
-	kingpin.Parse()
-	// re := regexp.MustCompile("S1")
+	srecs := new(Srecs)
 
-	fp, err := os.Open(*filename)
+	kingpin.Parse()
+
+	srecs.ParseFile(filename)
+
+}
+
+func (sr *Srecs) ParseFile(file *string) {
+	srec := new(Srec)
+
+	fp, err := os.Open(*file)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -66,6 +77,7 @@ func main() {
 		srec.address = uint32(addr)
 		srec.checksum = byte(csum)
 		srec.data = data
+		sr.records = append(sr.records, *srec)
 
 		fmt.Printf("%s %02X %04X ", srec.srectype, srec.length, srec.address)
 		for _, b := range srec.data {
@@ -74,9 +86,6 @@ func main() {
 		fmt.Printf(" %02X", srec.checksum)
 		fmt.Println()
 	}
-}
-
-func ParseSrec() {
 }
 
 func PrintOnlyData() {
