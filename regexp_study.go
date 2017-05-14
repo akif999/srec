@@ -37,7 +37,7 @@ func main() {
 
 	srecs.ParseFile(filename)
 	srecs.PrintOnlyData()
-
+	srecs.WriteBinaryToFile()
 }
 
 func (sr *Srecs) ParseFile(file *string) {
@@ -76,18 +76,9 @@ func (sr *Srecs) ParseFile(file *string) {
 		srec.srectype = srectype
 		srec.length = uint32(len)
 		srec.address = uint32(addr)
-		srec.checksum = byte(csum)
 		srec.data = data
+		srec.checksum = byte(csum)
 		sr.records = append(sr.records, *srec)
-
-		/*
-			fmt.Printf("%s %02X %04X ", srec.srectype, srec.length, srec.address)
-			for _, b := range srec.data {
-				fmt.Printf("%02X", b)
-			}
-			fmt.Printf(" %02X", srec.checksum)
-			fmt.Println()
-		*/
 	}
 }
 
@@ -97,5 +88,14 @@ func (sr *Srecs) PrintOnlyData() {
 			fmt.Printf("%02X", b)
 		}
 		fmt.Println()
+	}
+}
+
+func (sr *Srecs) WriteBinaryToFile() {
+	writeFile, _ := os.OpenFile(*filename+".bin", os.O_WRONLY|os.O_CREATE, 0600)
+	writer := bufio.NewWriter(writeFile)
+	for _, r := range sr.records {
+		writer.Write(r.data)
+		writer.Flush()
 	}
 }
