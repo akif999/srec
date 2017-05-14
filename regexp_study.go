@@ -44,17 +44,13 @@ func main() {
 		ss := strings.Split(line, "")
 
 		/* get srectype*/
-		srec.srectype = strings.Join(ss[:2], "")
-		if srec.srectype != "S1" {
+		srectype := strings.Join(ss[:2], "")
+		if srectype != "S1" {
 			continue
 		}
-		/* get length */
+		/* get fields */
 		len, _ := strconv.ParseUint(strings.Join(ss[2:4], ""), 16, 32)
-		srec.length = uint32(len)
-		/* address */
 		addr, _ := strconv.ParseUint(strings.Join(ss[4:8], ""), 16, 32)
-		srec.address = uint32(addr)
-		/* get datafield*/
 		data := make([]byte, 0)
 		for i := 0; i < (4 + (int(len) * 2) - 2); i += 2 {
 			if i >= 8 {
@@ -62,12 +58,17 @@ func main() {
 				data = append(data, byte(b))
 			}
 		}
-		/* get checksum*/
 		csum, _ := strconv.ParseUint(strings.Join(ss[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
+
+		/* put fields */
+		srec.srectype = srectype
+		srec.length = uint32(len)
+		srec.address = uint32(addr)
 		srec.checksum = byte(csum)
+		srec.data = data
 
 		fmt.Printf("%s %02X %04X ", srec.srectype, srec.length, srec.address)
-		for _, b := range data {
+		for _, b := range srec.data {
 			fmt.Printf("%02X", b)
 		}
 		fmt.Printf(" %02X", srec.checksum)
