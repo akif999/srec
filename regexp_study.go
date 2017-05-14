@@ -36,6 +36,7 @@ func main() {
 	kingpin.Parse()
 
 	srecs.ParseFile(filename)
+	srecs.PrintOnlyData()
 
 }
 
@@ -79,14 +80,22 @@ func (sr *Srecs) ParseFile(file *string) {
 		srec.data = data
 		sr.records = append(sr.records, *srec)
 
-		fmt.Printf("%s %02X %04X ", srec.srectype, srec.length, srec.address)
-		for _, b := range srec.data {
-			fmt.Printf("%02X", b)
-		}
-		fmt.Printf(" %02X", srec.checksum)
-		fmt.Println()
+		/*
+			fmt.Printf("%s %02X %04X ", srec.srectype, srec.length, srec.address)
+			for _, b := range srec.data {
+				fmt.Printf("%02X", b)
+			}
+			fmt.Printf(" %02X", srec.checksum)
+			fmt.Println()
+		*/
 	}
 }
 
-func PrintOnlyData() {
+func (sr *Srecs) PrintOnlyData() {
+	for _, r := range sr.records {
+		for _, b := range r.data {
+			fmt.Printf("%02X", b)
+		}
+		fmt.Println()
+	}
 }
