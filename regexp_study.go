@@ -57,28 +57,31 @@ func (sr *Srecs) ParseFile(file *string) {
 
 		/* get srectype*/
 		srectype := strings.Join(ss[:2], "")
-		if srectype != "S1" {
-			continue
-		}
-		/* get fields */
-		len, _ := strconv.ParseUint(strings.Join(ss[2:4], ""), 16, 32)
-		addr, _ := strconv.ParseUint(strings.Join(ss[4:8], ""), 16, 32)
-		data := make([]byte, 0)
-		for i := 0; i < (4 + (int(len) * 2) - 2); i += 2 {
-			if i >= 8 {
-				b, _ := strconv.ParseUint(strings.Join(ss[i:i+2], ""), 16, 32)
-				data = append(data, byte(b))
+		switch srectype {
+		case "S1":
+			/* get fields */
+			len, _ := strconv.ParseUint(strings.Join(ss[2:4], ""), 16, 32)
+			addr, _ := strconv.ParseUint(strings.Join(ss[4:8], ""), 16, 32)
+			data := make([]byte, 0)
+			for i := 0; i < (4 + (int(len) * 2) - 2); i += 2 {
+				if i >= 8 {
+					b, _ := strconv.ParseUint(strings.Join(ss[i:i+2], ""), 16, 32)
+					data = append(data, byte(b))
+				}
 			}
+			csum, _ := strconv.ParseUint(strings.Join(ss[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
+			/* put fields */
+			srec.srectype = srectype
+			srec.length = uint32(len)
+			srec.address = uint32(addr)
+			srec.data = data
+			srec.checksum = byte(csum)
+			sr.records = append(sr.records, *srec)
+		case "S2":
+		case "S3":
+		default:
 		}
-		csum, _ := strconv.ParseUint(strings.Join(ss[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
 
-		/* put fields */
-		srec.srectype = srectype
-		srec.length = uint32(len)
-		srec.address = uint32(addr)
-		srec.data = data
-		srec.checksum = byte(csum)
-		sr.records = append(sr.records, *srec)
 	}
 }
 
