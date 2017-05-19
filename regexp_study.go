@@ -28,7 +28,6 @@ var (
 	filename = kingpin.Arg("filename", "srec file").ExistingFile()
 )
 
-// TODO グループ化してマッチさせ、columnスプリットでフィールドを取り出す
 func main() {
 	srecs := new(Srecs)
 
