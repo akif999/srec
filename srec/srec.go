@@ -12,10 +12,18 @@ import (
 const ()
 
 type Srec struct {
-	records []Record
+	headerRecord  headerRecord
+	binaryRecords []binaryRecord
+	footerRecord  footerRecord
 }
 
-type Record struct {
+type headerRecord struct {
+	length   uint32
+	data     []byte
+	checksum byte
+}
+
+type binaryRecord struct {
 	srectype string
 	length   uint32
 	address  uint32
@@ -23,10 +31,16 @@ type Record struct {
 	checksum byte
 }
 
+type footerRecord struct {
+	srectype  string
+	startaddr uint32
+	checksum  byte
+}
+
 var ()
 
 func (srs *Srec) ParseFile(file *string) {
-	rec := new(Record)
+	rec := new(binaryRecord)
 
 	fp, err := os.Open(*file)
 	if err != nil {
@@ -43,12 +57,12 @@ func (srs *Srec) ParseFile(file *string) {
 		srectype := strings.Join(sl[:2], "")
 		rec.getSrecFields(srectype, sl)
 		if srectype == "S1" {
-			srs.records = append(srs.records, *rec)
+			srs.binaryRecords = append(srs.binaryRecords, *rec)
 		}
 	}
 }
 
-func (rec *Record) getSrecFields(srectype string, sl []string) {
+func (rec *binaryRecord) getSrecFields(srectype string, sl []string) {
 	var len uint64
 	var addr uint64
 	var data []byte
@@ -79,7 +93,7 @@ func (rec *Record) getSrecFields(srectype string, sl []string) {
 }
 
 func (sr *Srec) PrintOnlyData() {
-	for _, r := range sr.records {
+	for _, r := range sr.binaryRecords {
 		for _, b := range r.data {
 			fmt.Printf("%02X", b)
 		}
@@ -90,7 +104,7 @@ func (sr *Srec) PrintOnlyData() {
 func (sr *Srec) WriteBinaryToFile(filename *string) {
 	writeFile, _ := os.OpenFile(*filename+".bin", os.O_WRONLY|os.O_CREATE, 0600)
 	writer := bufio.NewWriter(writeFile)
-	for _, r := range sr.records {
+	for _, r := range sr.binaryRecords {
 		writer.Write(r.data)
 		writer.Flush()
 	}
