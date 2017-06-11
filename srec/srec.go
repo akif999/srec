@@ -3,6 +3,7 @@ package srec
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -15,6 +16,8 @@ type Srec struct {
 	headerRecord  headerRecord
 	binaryRecords []binaryRecord
 	footerRecord  footerRecord
+	outStream     io.Writer
+	errStream     io.Writer
 }
 
 type headerRecord struct {
@@ -38,6 +41,10 @@ type footerRecord struct {
 }
 
 var ()
+
+func NewSrec(outs, errs io.Writer) *Srec {
+	return &Srec{outStream: outs, errStream: errs}
+}
 
 func (srs *Srec) ParseFile(file *string) {
 	rec := new(binaryRecord)
@@ -95,7 +102,7 @@ func (rec *binaryRecord) getSrecFields(srectype string, sl []string) {
 func (sr *Srec) PrintOnlyData() {
 	for _, r := range sr.binaryRecords {
 		for _, b := range r.data {
-			fmt.Printf("%02X", b)
+			fmt.Fprintf(sr.outStream, "%02X", b)
 		}
 		fmt.Println()
 	}
