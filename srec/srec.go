@@ -62,9 +62,20 @@ func (srs *Srec) ParseFile(file *string) {
 		sl := strings.Split(line, "")
 
 		srectype := strings.Join(sl[:2], "")
-		rec.getSrecFields(srectype, sl)
-		if srectype == "S1" {
+		switch {
+		case srectype == "S0":
+		case srectype == "S1":
+			rec.getSrecFields(srectype, sl)
 			srs.binaryRecords = append(srs.binaryRecords, *rec)
+		case srectype == "S2":
+		case srectype == "S3":
+		case srectype == "S4":
+			// S4 is reserved
+		case srectype == "S5":
+		case srectype == "S6":
+		case srectype == "S7":
+		case srectype == "S8":
+		case srectype == "S9":
 		}
 	}
 }
