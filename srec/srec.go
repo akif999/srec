@@ -110,6 +110,9 @@ func (rec *binaryRecord) getSrecFields(srectype string, sl []string) {
 	rec.checksum = byte(csum)
 }
 
+func Padding() {
+}
+
 func (sr *Srec) PrintOnlyData() {
 	for _, r := range sr.binaryRecords {
 		for _, b := range r.data {
