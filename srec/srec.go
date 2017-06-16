@@ -65,14 +65,16 @@ func (srs *Srec) ParseFile(file *string) {
 		switch {
 		case srectype == "S0":
 		case srectype == "S1":
-			rec.getSrecFields(srectype, sl)
+			rec.getSrecBinaryFields(srectype, sl)
 			srs.binaryRecords = append(srs.binaryRecords, *rec)
 		case srectype == "S2":
 		case srectype == "S3":
 		case srectype == "S4":
 			// S4 is reserved
 		case srectype == "S5":
+			// S5 is reserved
 		case srectype == "S6":
+			// S6 is reserved
 		case srectype == "S7":
 		case srectype == "S8":
 		case srectype == "S9":
@@ -80,7 +82,7 @@ func (srs *Srec) ParseFile(file *string) {
 	}
 }
 
-func (rec *binaryRecord) getSrecFields(srectype string, sl []string) {
+func (rec *binaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	var len uint64
 	var addr uint64
 	var data []byte
