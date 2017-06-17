@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./srec"
+	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
 	"os"
