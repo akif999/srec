@@ -82,6 +82,9 @@ func (srs *Srec) ParseFile(file *string) {
 	}
 }
 
+func (rec *headerRecord) getSrecHeaderFields(srectype string, sl []string) {
+}
+
 func (rec *binaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	var len uint64
 	var addr uint64
@@ -110,6 +113,9 @@ func (rec *binaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	rec.address = uint32(addr)
 	rec.data = data
 	rec.checksum = byte(csum)
+}
+
+func (rec *footerRecord) getSrecFooterFields(srectype string, sl []string) {
 }
 
 func Padding() {
