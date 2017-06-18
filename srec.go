@@ -16,6 +16,8 @@ type Srec struct {
 	headerRecord  headerRecord
 	binaryRecords []binaryRecord
 	footerRecord  footerRecord
+	startAddress  uint
+	endAddress    uint
 	outStream     io.Writer
 	errStream     io.Writer
 }
