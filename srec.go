@@ -47,6 +47,18 @@ func NewSrec(outs, errs io.Writer) *Srec {
 	return &Srec{OutStream: outs, ErrStream: errs}
 }
 
+func NewHeaderRecord() *HeaderRecord {
+	return &HeaderRecord{}
+}
+
+func NewBianryRecord() *BinaryRecord {
+	return &BinaryRecord{}
+}
+
+func NewFooterRecord() *FooterRecord {
+	return &FooterRecord{}
+}
+
 func (srs *Srec) ParseFile(file *string) {
 	rec := new(BinaryRecord)
 
