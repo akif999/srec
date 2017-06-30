@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
 	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"io"
@@ -27,6 +29,24 @@ func main() {
 	kingpin.Parse()
 
 	srec.ParseFile(filename)
-	srec.PrintOnlyData()
-	srec.WriteBinaryToFile(filename)
+	PrintOnlyData(srec)
+	WriteBinaryToFile(srec, filename)
+}
+
+func PrintOnlyData(sr *srec.Srec) {
+	for _, r := range sr.BinaryRecords {
+		for _, b := range r.data {
+			fmt.Fprintf(sr.OutStream, "%02X", b)
+		}
+		fmt.Println()
+	}
+}
+
+func WriteBinaryToFile(sr *srec.Srec, filename *string) {
+	writeFile, _ := os.OpenFile(*filename+".bin", os.O_WRONLY|os.O_CREATE, 0600)
+	writer := bufio.NewWriter(writeFile)
+	for _, r := range sr.BinaryRecords {
+		writer.Write(r.data)
+		writer.Flush()
+	}
 }
