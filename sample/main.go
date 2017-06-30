@@ -1,3 +1,4 @@
+// this source code is sample of package srec
 package main
 
 import (
@@ -20,8 +21,6 @@ type cli struct {
 	errs io.Writer
 }
 
-// このmain.goおよびmain()は、ライブラリのテスト用だが、
-// srec packageのテストを追加後は不要になる見込み
 func main() {
 	c := &cli{outs: os.Stdout, errs: os.Stderr}
 	srec := srec.NewSrec(c.outs, c.errs)
