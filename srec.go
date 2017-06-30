@@ -14,8 +14,8 @@ const ()
 type Srec struct {
 	BeaderRecord  HeaderRecord
 	BinaryRecords []BinaryRecord
-	BooterRecord  FooterRecord
-	BtartAddress  uint
+	FooterRecord  FooterRecord
+	StartAddress  uint
 	EndAddress    uint
 	OutStream     io.Writer
 	ErrStream     io.Writer
