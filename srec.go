@@ -83,10 +83,10 @@ func (srs *Srec) ParseFile(file *string) {
 	}
 }
 
-func (rec *headerRecord) getSrecHeaderFields(srectype string, sl []string) {
+func (rec *HeaderRecord) getSrecHeaderFields(srectype string, sl []string) {
 }
 
-func (rec *binaryRecord) getSrecBinaryFields(srectype string, sl []string) {
+func (rec *BinaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	var len uint64
 	var addr uint64
 	var data []byte
