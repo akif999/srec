@@ -131,5 +131,17 @@ func (rec *BinaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 func (rec *FooterRecord) getSrecFooterFields(srectype string, sl []string) {
 }
 
+func Whole() {
+}
+
+func Bytes() {
+}
+
 func Padding() {
+}
+
+func EditBinData() {
+}
+
+func ConvertSrecTypes() {
 }
