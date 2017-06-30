@@ -2,7 +2,6 @@ package srec
 
 import (
 	"bufio"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,43 +12,43 @@ import (
 const ()
 
 type Srec struct {
-	headerRecord  headerRecord
-	binaryRecords []binaryRecord
-	footerRecord  footerRecord
-	startAddress  uint
-	endAddress    uint
-	outStream     io.Writer
-	errStream     io.Writer
+	BeaderRecord  HeaderRecord
+	BinaryRecords []BinaryRecord
+	BooterRecord  FooterRecord
+	BtartAddress  uint
+	EndAddress    uint
+	OutStream     io.Writer
+	ErrStream     io.Writer
 }
 
-type headerRecord struct {
-	length   uint32
-	data     []byte
-	checksum byte
+type HeaderRecord struct {
+	Length   uint32
+	Data     []byte
+	Checksum byte
 }
 
-type binaryRecord struct {
-	srectype string
-	length   uint32
-	address  uint32
-	data     []byte
-	checksum byte
+type BinaryRecord struct {
+	Srectype string
+	Length   uint32
+	Address  uint32
+	Data     []byte
+	Checksum byte
 }
 
-type footerRecord struct {
-	srectype  string
-	startaddr uint32
-	checksum  byte
+type FooterRecord struct {
+	Srectype  string
+	Startaddr uint32
+	Checksum  byte
 }
 
 var ()
 
 func NewSrec(outs, errs io.Writer) *Srec {
-	return &Srec{outStream: outs, errStream: errs}
+	return &Srec{OutStream: outs, ErrStream: errs}
 }
 
 func (srs *Srec) ParseFile(file *string) {
-	rec := new(binaryRecord)
+	rec := new(BinaryRecord)
 
 	fp, err := os.Open(*file)
 	if err != nil {
@@ -68,7 +67,7 @@ func (srs *Srec) ParseFile(file *string) {
 		case srectype == "S0":
 		case srectype == "S1":
 			rec.getSrecBinaryFields(srectype, sl)
-			srs.binaryRecords = append(srs.binaryRecords, *rec)
+			srs.binaryRecords = append(srs.BinaryRecords, *rec)
 		case srectype == "S2":
 		case srectype == "S3":
 		case srectype == "S4":
@@ -110,33 +109,15 @@ func (rec *binaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	default:
 		return
 	}
-	rec.srectype = srectype
-	rec.length = uint32(len)
-	rec.address = uint32(addr)
-	rec.data = data
-	rec.checksum = byte(csum)
+	rec.Srectype = srectype
+	rec.Length = uint32(len)
+	rec.Address = uint32(addr)
+	rec.Data = data
+	rec.Checksum = byte(csum)
 }
 
-func (rec *footerRecord) getSrecFooterFields(srectype string, sl []string) {
+func (rec *FooterRecord) getSrecFooterFields(srectype string, sl []string) {
 }
 
 func Padding() {
-}
-
-func (sr *Srec) PrintOnlyData() {
-	for _, r := range sr.binaryRecords {
-		for _, b := range r.data {
-			fmt.Fprintf(sr.outStream, "%02X", b)
-		}
-		fmt.Println()
-	}
-}
-
-func (sr *Srec) WriteBinaryToFile(filename *string) {
-	writeFile, _ := os.OpenFile(*filename+".bin", os.O_WRONLY|os.O_CREATE, 0600)
-	writer := bufio.NewWriter(writeFile)
-	for _, r := range sr.binaryRecords {
-		writer.Write(r.data)
-		writer.Flush()
-	}
 }
