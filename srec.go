@@ -67,7 +67,7 @@ func (srs *Srec) ParseFile(file *string) {
 		case srectype == "S0":
 		case srectype == "S1":
 			rec.getSrecBinaryFields(srectype, sl)
-			srs.binaryRecords = append(srs.BinaryRecords, *rec)
+			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
 		case srectype == "S2":
 		case srectype == "S3":
 		case srectype == "S4":
