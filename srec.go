@@ -3,8 +3,6 @@ package srec
 import (
 	"bufio"
 	"io"
-	"log"
-	"os"
 	"strconv"
 	"strings"
 )
@@ -59,16 +57,10 @@ func NewFooterRecord() *FooterRecord {
 	return &FooterRecord{}
 }
 
-func (srs *Srec) ParseFile(file *string) {
+func (srs *Srec) ParseFile(fileReader io.Reader) {
 	rec := new(BinaryRecord)
 
-	fp, err := os.Open(*file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fp.Close()
-
-	scanner := bufio.NewScanner(fp)
+	scanner := bufio.NewScanner(fileReader)
 
 	for scanner.Scan() {
 		line := scanner.Text()
