@@ -4,10 +4,12 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"log"
+	"os"
+
 	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"io"
-	"os"
 )
 
 const ()
@@ -27,7 +29,12 @@ func main() {
 
 	kingpin.Parse()
 
-	srec.ParseFile(filename)
+	fp, err := os.Open(*filename)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fp.Close()
+	srec.ParseFile(fp)
 	PrintOnlyData(srec)
 	WriteBinaryToFile(srec, filename)
 }
