@@ -15,6 +15,7 @@ type Srec struct {
 	FooterRecord  FooterRecord
 	StartAddress  uint
 	EndAddress    uint
+	Bytes         []byte
 	OutStream     io.Writer
 	ErrStream     io.Writer
 }
