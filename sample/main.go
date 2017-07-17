@@ -9,8 +9,7 @@ import (
 	"os"
 	"strings"
 
-	// "github.com/AKIF999/srec"
-	"../../srec"
+	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
