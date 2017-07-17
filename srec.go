@@ -127,7 +127,17 @@ func (rec *FooterRecord) getSrecFooterFields(srectype string, sl []string) {
 func Whole() {
 }
 
-func Bytes() {
+func (sr *Srec) GetBytes(ByteSize uint32) []byte {
+	var bytes []byte
+	for _, br := range sr.BinaryRecords {
+		for _, b := range br.Data {
+			bytes = append(bytes, b)
+			if uint32(len(bytes)) == ByteSize {
+				return bytes
+			}
+		}
+	}
+	return bytes
 }
 
 func Padding() {
