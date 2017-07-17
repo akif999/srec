@@ -7,8 +7,10 @@ import (
 	"io"
 	"log"
 	"os"
+	"strings"
 
-	"github.com/AKIF999/srec"
+	// "github.com/AKIF999/srec"
+	"../../srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -25,7 +27,7 @@ type cli struct {
 
 func main() {
 	c := &cli{outs: os.Stdout, errs: os.Stderr}
-	srec := srec.NewSrec(c.outs, c.errs)
+	sr := srec.NewSrec(c.outs, c.errs)
 
 	kingpin.Parse()
 
@@ -34,9 +36,26 @@ func main() {
 		log.Fatal(err)
 	}
 	defer fp.Close()
-	srec.ParseFile(fp)
-	PrintOnlyData(srec)
-	WriteBinaryToFile(srec, filename)
+	sr.ParseFile(fp)
+	bt := sr.GetBytes(0xF4)
+	for i, b := range bt {
+		if i%16 == 0 {
+			fmt.Println()
+		}
+		fmt.Printf("%02X", b)
+	}
+	srec2 := srec.NewSrec(c.outs, c.errs)
+	file := strings.NewReader("S113000000000100000001000000010000000100E8")
+	srec2.ParseFile(file)
+	bt2 := srec2.GetBytes(0x10)
+	for i, b := range bt2 {
+		if i%16 == 0 {
+			fmt.Println()
+		}
+		fmt.Printf("%02X", b)
+	}
+	// PrintOnlyData(srec)
+	// WriteBinaryToFile(srec, filename)
 }
 
 func PrintOnlyData(sr *srec.Srec) {
