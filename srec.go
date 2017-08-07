@@ -122,7 +122,7 @@ func getAddrStrLen(srectype string) (int, error) {
 	}
 }
 
-func getLengthStrLen(sl []string) (int, error) {
+func getDataLenAsStr(sl []string) (int, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	return int(len * 2), err
 }
@@ -152,13 +152,13 @@ func getData(srectype string, sl []string) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	lengthStrLen, err := getLengthStrLen(sl)
+	dataLenAsStr, err := getDataLenAsStr(sl)
 	if err != nil {
 		return []byte{}, err
 	}
 
 	data := make([]byte, 0)
-	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(lengthStrLen-CSumFieldStrLen); i += 2 {
+	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(dataLenAsStr-CSumFieldStrLen); i += 2 {
 		b, err := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
 		if err != nil {
 			return []byte{}, err
@@ -169,13 +169,13 @@ func getData(srectype string, sl []string) ([]byte, error) {
 }
 
 func getChecksum(srectype string, sl []string) (byte, error) {
-	lengthStrLen, err := getLengthStrLen(sl)
+	dataLenAsStr, err := getDataLenAsStr(sl)
 	if err != nil {
 		return 0, err
 	}
 
-	CSumIndexSt := TypeFieldStrLen + LengthFieldStrLen + lengthStrLen - CSumFieldStrLen
-	CSumIndexEd := TypeFieldStrLen + LengthFieldStrLen + lengthStrLen
+	CSumIndexSt := TypeFieldStrLen + LengthFieldStrLen + dataLenAsStr - CSumFieldStrLen
+	CSumIndexEd := TypeFieldStrLen + LengthFieldStrLen + dataLenAsStr
 	csum, err := strconv.ParseUint(strings.Join(sl[CSumIndexSt:CSumIndexEd], ""), 16, 32)
 	if err != nil {
 		return 0, err
