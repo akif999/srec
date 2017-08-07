@@ -70,14 +70,10 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 		srectype := strings.Join(sl[:2], "")
 		switch {
 		case srectype == "S0":
-		case srectype == "S1":
+		case srectype == "S1" || "S2" || "S3":
 			rec.getSrecBinaryFields(srectype, sl)
 			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
-		case srectype == "S2":
-		case srectype == "S3":
-		case srectype == "S7":
-		case srectype == "S8":
-		case srectype == "S9":
+		case srectype == "S7" || "S8" || "S9":
 		default:
 			// pass S4~6
 		}
