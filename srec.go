@@ -18,8 +18,8 @@ type Srec struct {
 	HeaderRecord  HeaderRecord
 	BinaryRecords []BinaryRecord
 	FooterRecord  FooterRecord
-	StartAddress  uint
-	EndAddress    uint
+	StartAddress  uint32
+	EndAddress    uint32
 	Bytes         []byte
 	OutStream     io.Writer
 	ErrStream     io.Writer
@@ -81,6 +81,10 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 			// pass S4~6
 		}
 	}
+	srs.StartAddress = getStartAddr(srs)
+	srs.EndAddress = getEndAddr(srs)
+	LastRecordDatalen := getLastRecordDataLen(srs)
+	srs.Bytes = makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
@@ -183,14 +187,33 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 	return byte(csum), nil
 }
 
-func (sr *Srec) GetBytes(ByteSize uint32) []byte {
+func getStartAddr(sr *Srec) uint32 {
+	return sr.BinaryRecords[0].Address
+}
+
+func getEndAddr(sr *Srec) uint32 {
+	return sr.BinaryRecords[len(sr.BinaryRecords)-1].Address
+}
+
+func getLastRecordDataLen(sr *Srec) uint32 {
+	len := len(sr.BinaryRecords[len(sr.BinaryRecords)-1].Data)
+	return uint32(len)
+}
+
+func makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) []byte {
+	size := (endAddr - startAddr) + lastRecordDataLen
+	bytes := make([]byte, 0)
+	for i := 0; i < int(size); i++ {
+		bytes = append(bytes, 0xFF)
+	}
+	return bytes
+}
+
+func (sr *Srec) GetBytes() []byte {
 	var bytes []byte
 	for _, br := range sr.BinaryRecords {
 		for _, b := range br.Data {
 			bytes = append(bytes, b)
-			if uint32(len(bytes)) == ByteSize {
-				return bytes
-			}
 		}
 	}
 	return bytes
