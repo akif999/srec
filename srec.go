@@ -89,8 +89,6 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	// var csum uint64
 	var err error
 
-	// csum, _ = strconv.ParseUint(strings.Join(sl[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
-
 	rec.Srectype = srectype
 	rec.Length, err = getLengh(sl)
 	if err != nil {
@@ -104,7 +102,7 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	if err != nil {
 		return err
 	}
-	// rec.Checksum = byte(csum)
+	rec.Checksum, err = getChecksum(srectype, sl)
 	return nil
 }
 
@@ -165,6 +163,21 @@ func getData(srectype string, sl []string) ([]byte, error) {
 		data = append(data, byte(b))
 	}
 	return data, nil
+}
+
+func getChecksum(srectype string, sl []string) (byte, error) {
+	lengthStrLen, err := getLengthStrLen(sl)
+	if err != nil {
+		return 0, err
+	}
+
+	CSumIndexSt := TypeFieldStrLen + LengthFieldStrLen + lengthStrLen - CSumFieldStrLen
+	CSumIndexEd := TypeFieldStrLen + LengthFieldStrLen + lengthStrLen
+	csum, err := strconv.ParseUint(strings.Join(sl[CSumIndexSt:CSumIndexEd], ""), 16, 32)
+	if err != nil {
+		return 0, err
+	}
+	return byte(csum), nil
 }
 
 func (sr *Srec) GetBytes(ByteSize uint32) []byte {
