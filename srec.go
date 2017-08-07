@@ -36,7 +36,7 @@ type BinaryRecord struct {
 
 type FooterRecord struct {
 	Srectype  string
-	Entryaddr uint32
+	EntryAddr uint32
 	Checksum  byte
 }
 
@@ -88,9 +88,6 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 	}
 }
 
-func (rec *HeaderRecord) getSrecHeaderFields(srectype string, sl []string) {
-}
-
 func (rec *BinaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	var len uint64
 	var addr uint64
@@ -121,12 +118,6 @@ func (rec *BinaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	rec.Checksum = byte(csum)
 }
 
-func (rec *FooterRecord) getSrecFooterFields(srectype string, sl []string) {
-}
-
-func Whole() {
-}
-
 func (sr *Srec) GetBytes(ByteSize uint32) []byte {
 	var bytes []byte
 	for _, br := range sr.BinaryRecords {
@@ -138,13 +129,4 @@ func (sr *Srec) GetBytes(ByteSize uint32) []byte {
 		}
 	}
 	return bytes
-}
-
-func Padding() {
-}
-
-func EditBinData() {
-}
-
-func ConvertSrecTypes() {
 }
