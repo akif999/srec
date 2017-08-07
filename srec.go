@@ -182,6 +182,17 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 	return byte(csum), nil
 }
 
+func (sr *Srec) GetBytes() ([]byte, error) {
+	sr.StartAddress = getStartAddr(sr)
+	sr.EndAddress = getEndAddr(sr)
+	LastRecordDatalen := getLastRecordDataLen(sr)
+	err := sr.makePaddedBytes(sr.StartAddress, sr.EndAddress, LastRecordDatalen)
+	if err != nil {
+		return sr.Bytes, err
+	}
+	return sr.Bytes, err
+}
+
 func getStartAddr(sr *Srec) uint32 {
 	return sr.BinaryRecords[0].Address
 }
@@ -211,15 +222,4 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 		}
 	}
 	return nil
-}
-
-func (sr *Srec) GetBytes() ([]byte, error) {
-	sr.StartAddress = getStartAddr(sr)
-	sr.EndAddress = getEndAddr(sr)
-	LastRecordDatalen := getLastRecordDataLen(sr)
-	err := sr.makePaddedBytes(sr.StartAddress, sr.EndAddress, LastRecordDatalen)
-	if err != nil {
-		return sr.Bytes, err
-	}
-	return sr.Bytes, err
 }
