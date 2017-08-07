@@ -40,10 +40,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt, err := sr.GetBytes()
-	if err != nil {
-		log.Fatal(err)
-	}
+	bt := sr.GetBytes()
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()
@@ -52,16 +49,25 @@ func main() {
 	}
 	fmt.Println()
 
+	err = sr.SetBytes(0x000000E4, []byte{0x12, 0x34, 0x56, 0x78})
+	if err != nil {
+		log.Fatal(err)
+	}
+	bt = sr.GetBytes()
+	for i, b := range bt {
+		if i != 0 && i%16 == 0 {
+			fmt.Println()
+		}
+		fmt.Printf("%02X", b)
+	}
+
 	sr2 := srec.NewSrec(c.outs, c.errs)
 	file := strings.NewReader("S113000000000100000001000000010000000100E8")
 	err = sr2.ParseFile(file)
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt2, err := sr2.GetBytes()
-	if err != nil {
-		log.Fatal(err)
-	}
+	bt2 := sr2.GetBytes()
 	for i, b := range bt2 {
 		if i%16 == 0 {
 			fmt.Println()
