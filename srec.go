@@ -45,8 +45,6 @@ type FooterRecord struct {
 	Checksum  byte
 }
 
-var ()
-
 func NewSrec(outs, errs io.Writer) *Srec {
 	return &Srec{OutStream: outs, ErrStream: errs}
 }
