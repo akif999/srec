@@ -75,15 +75,11 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
 		case srectype == "S2":
 		case srectype == "S3":
-		case srectype == "S4":
-			// S4 is reserved
-		case srectype == "S5":
-			// S5 is reserved
-		case srectype == "S6":
-			// S6 is reserved
 		case srectype == "S7":
 		case srectype == "S8":
 		case srectype == "S9":
+		default:
+			// pass S4~6
 		}
 	}
 }
