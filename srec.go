@@ -2,6 +2,7 @@ package srec
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strconv"
 	"strings"
@@ -84,28 +85,21 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 	}
 }
 
-func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) {
+func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
 	var len uint64
 	var addr uint64
 	var data []byte
 	var csum uint64
-	var addrStrLen byte
 
-	switch srectype {
-	case "S1":
-		addrStrLen = 4
-	case "S2":
-		addrStrLen = 6
-	case "S3":
-		addrStrLen = 8
-	default:
-		// return error
+	addrStrLen, err := getAddrStrLen(srectype)
+	if err != nil {
+		return err
 	}
 
 	len, _ = strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	addr, _ = strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
 	data = make([]byte, 0)
-	for i := (TypeFieldStrLen + LengthFieldStrLen + int(addrStrLen)); i < (TypeFieldStrLen+LengthFieldStrLen)+((int(len)*2)-CSumFieldStrLen); i += 2 {
+	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+((int(len)*2)-CSumFieldStrLen); i += 2 {
 		b, _ := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
 		data = append(data, byte(b))
 	}
@@ -116,6 +110,20 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	rec.Address = uint32(addr)
 	rec.Data = data
 	rec.Checksum = byte(csum)
+	return nil
+}
+
+func getAddrStrLen(srectype string) (int, error) {
+	switch srectype {
+	case "S1":
+		return 4, nil
+	case "S2":
+		return 6, nil
+	case "S3":
+		return 8, nil
+	default:
+		return 0, fmt.Errorf("%s is not srectype", srectype)
+	}
 }
 
 func (sr *Srec) GetBytes(ByteSize uint32) []byte {
