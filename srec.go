@@ -84,7 +84,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 	srs.StartAddress = getStartAddr(srs)
 	srs.EndAddress = getEndAddr(srs)
 	LastRecordDatalen := getLastRecordDataLen(srs)
-	srs.Bytes = makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
+	srs.makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
@@ -199,13 +199,22 @@ func getLastRecordDataLen(sr *Srec) uint32 {
 	return uint32(len)
 }
 
-func makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) []byte {
+func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) error {
 	size := (endAddr - startAddr) + lastRecordDataLen
-	bytes := make([]byte, 0)
 	for i := 0; i < int(size); i++ {
-		bytes = append(bytes, 0xFF)
+		sr.Bytes = append(sr.Bytes, 0xFF)
 	}
-	return bytes
+
+	ofst := int(startAddr)
+	for _, brcs := range sr.BinaryRecords {
+		for i := 0; i < len(brcs.Data); i++ {
+			if (brcs.Address < sr.StartAddress) || (brcs.Address > sr.EndAddress) {
+				return fmt.Errorf("data address %0x08X is out of srec range", brcs.Address)
+			}
+			sr.Bytes[(int(brcs.Address)-ofst)+i] = brcs.Data[i]
+		}
+	}
+	return nil
 }
 
 func (sr *Srec) GetBytes() []byte {
