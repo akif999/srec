@@ -158,7 +158,9 @@ func getData(srectype string, sl []string) ([]byte, error) {
 	}
 
 	data := make([]byte, 0)
-	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(dataLenAsStr-CSumFieldStrLen); i += 2 {
+	DataIndexSt := TypeFieldStrLen + LengthFieldStrLen + addrStrLen
+	DataIndexEd := (TypeFieldStrLen + LengthFieldStrLen) + (dataLenAsStr - CSumFieldStrLen)
+	for i := DataIndexSt; i < DataIndexEd; i += 2 {
 		b, err := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
 		if err != nil {
 			return []byte{}, err
