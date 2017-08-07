@@ -7,7 +7,11 @@ import (
 	"strings"
 )
 
-const ()
+const (
+	TypeFieldStrLen   = 2
+	LengthFieldStrLen = 2
+	CSumFieldStrLen   = 2
+)
 
 type Srec struct {
 	HeaderRecord  HeaderRecord
@@ -70,10 +74,10 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 		srectype := strings.Join(sl[:2], "")
 		switch {
 		case srectype == "S0":
-		case srectype == "S1" || "S2" || "S3":
+		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
 			rec.getSrecBinaryFields(srectype, sl)
 			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
-		case srectype == "S7" || "S8" || "S9":
+		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
 		default:
 			// pass S4~6
 		}
@@ -85,24 +89,28 @@ func (rec *BinaryRecord) getSrecBinaryFields(srectype string, sl []string) {
 	var addr uint64
 	var data []byte
 	var csum uint64
+	var addrStrLen byte
 
 	switch srectype {
 	case "S1":
-		len, _ = strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
-		addr, _ = strconv.ParseUint(strings.Join(sl[4:8], ""), 16, 32)
-		data = make([]byte, 0)
-		for i := 0; i < (4 + (int(len) * 2) - 2); i += 2 {
-			if i >= 8 {
-				b, _ := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
-				data = append(data, byte(b))
-			}
-		}
-		csum, _ = strconv.ParseUint(strings.Join(sl[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
+		addrStrLen = 4
 	case "S2":
+		addrStrLen = 6
 	case "S3":
+		addrStrLen = 8
 	default:
-		return
+		// return error
 	}
+
+	len, _ = strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
+	addr, _ = strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
+	data = make([]byte, 0)
+	for i := (TypeFieldStrLen + LengthFieldStrLen + int(addrStrLen)); i < (TypeFieldStrLen+LengthFieldStrLen)+((int(len)*2)-CSumFieldStrLen); i += 2 {
+		b, _ := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
+		data = append(data, byte(b))
+	}
+	csum, _ = strconv.ParseUint(strings.Join(sl[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
+
 	rec.Srectype = srectype
 	rec.Length = uint32(len)
 	rec.Address = uint32(addr)
