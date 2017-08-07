@@ -205,7 +205,7 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 	for _, brcs := range sr.BinaryRecords {
 		for i := 0; i < len(brcs.Data); i++ {
 			if (brcs.Address < sr.StartAddress) || (brcs.Address > sr.EndAddress) {
-				return fmt.Errorf("data address %0x08X is out of srec range", brcs.Address)
+				return fmt.Errorf("data address 0x%08X is out of srec range", brcs.Address)
 			}
 			sr.Bytes[(int(brcs.Address)-ofst)+i] = brcs.Data[i]
 		}
