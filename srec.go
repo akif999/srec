@@ -88,7 +88,6 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
-	// var csum uint64
 	var err error
 
 	rec.Srectype = srectype
