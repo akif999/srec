@@ -10,7 +10,7 @@ import (
 const ()
 
 type Srec struct {
-	BeaderRecord  HeaderRecord
+	HeaderRecord  HeaderRecord
 	BinaryRecords []BinaryRecord
 	FooterRecord  FooterRecord
 	StartAddress  uint
