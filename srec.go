@@ -61,7 +61,7 @@ func NewFooterRecord() *FooterRecord {
 	return &FooterRecord{}
 }
 
-func (srs *Srec) ParseFile(fileReader io.Reader) {
+func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	rec := new(BinaryRecord)
 
 	scanner := bufio.NewScanner(fileReader)
@@ -74,13 +74,17 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 		switch {
 		case srectype == "S0":
 		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
-			rec.getSrecBinaryRecordFields(srectype, sl)
+			err := rec.getSrecBinaryRecordFields(srectype, sl)
+			if err != nil {
+				return err
+			}
 			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
 		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
 		default:
 			// pass S4~6
 		}
 	}
+	return nil
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
