@@ -84,6 +84,16 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			// pass S4~6
 		}
 	}
+	if len(srs.BinaryRecords) == 0 {
+		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
+	}
+	srs.StartAddress = getStartAddr(srs)
+	srs.EndAddress = getEndAddr(srs)
+	LastRecordDatalen := getLastRecordDataLen(srs)
+	err := srs.makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -186,15 +196,8 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 	return byte(csum), nil
 }
 
-func (sr *Srec) GetBytes() ([]byte, error) {
-	sr.StartAddress = getStartAddr(sr)
-	sr.EndAddress = getEndAddr(sr)
-	LastRecordDatalen := getLastRecordDataLen(sr)
-	err := sr.makePaddedBytes(sr.StartAddress, sr.EndAddress, LastRecordDatalen)
-	if err != nil {
-		return sr.Bytes, err
-	}
-	return sr.Bytes, err
+func (sr *Srec) GetBytes() []byte {
+	return sr.Bytes
 }
 
 func getStartAddr(sr *Srec) uint32 {
@@ -224,6 +227,21 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 			}
 			sr.Bytes[(int(brcs.Address)-ofst)+i] = brcs.Data[i]
 		}
+	}
+	return nil
+}
+
+func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
+	if len(sr.BinaryRecords) == 0 {
+		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
+	}
+	ofst := int(writeAddress) - int(sr.StartAddress)
+	for i := 0; i < len(wBytes); i++ {
+		wtInd := ofst + i
+		if (wtInd < int(sr.StartAddress)) || (wtInd > int(sr.EndAddress)) {
+			return fmt.Errorf("data address 0x%08X is out of srec range", wtInd+int(sr.StartAddress))
+		}
+		sr.Bytes[wtInd] = wBytes[i]
 	}
 	return nil
 }
