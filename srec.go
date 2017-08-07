@@ -109,7 +109,7 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	return nil
 }
 
-func getAddrStrLen(srectype string) (int, error) {
+func getAddrLenAsStr(srectype string) (int, error) {
 	switch srectype {
 	case "S1":
 		return 4, nil
@@ -128,11 +128,11 @@ func getDataLenAsStr(sl []string) (int, error) {
 }
 
 func getAddress(srectype string, sl []string) (uint32, error) {
-	addrStrLen, err := getAddrStrLen(srectype)
+	addrLenAsStr, err := getAddrLenAsStr(srectype)
 	if err != nil {
 		return 0, err
 	}
-	addr, err := strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
+	addr, err := strconv.ParseUint(strings.Join(sl[4:4+addrLenAsStr], ""), 16, 32)
 	if err != nil {
 		return 0, err
 	}
@@ -148,7 +148,7 @@ func getLengh(sl []string) (uint32, error) {
 }
 
 func getData(srectype string, sl []string) ([]byte, error) {
-	addrStrLen, err := getAddrStrLen(srectype)
+	addrLenAsStr, err := getAddrLenAsStr(srectype)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -158,7 +158,7 @@ func getData(srectype string, sl []string) ([]byte, error) {
 	}
 
 	data := make([]byte, 0)
-	DataIndexSt := TypeFieldStrLen + LengthFieldStrLen + addrStrLen
+	DataIndexSt := TypeFieldStrLen + LengthFieldStrLen + addrLenAsStr
 	DataIndexEd := (TypeFieldStrLen + LengthFieldStrLen) + (dataLenAsStr - CSumFieldStrLen)
 	for i := DataIndexSt; i < DataIndexEd; i += 2 {
 		b, err := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
