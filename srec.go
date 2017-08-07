@@ -36,7 +36,7 @@ type BinaryRecord struct {
 
 type FooterRecord struct {
 	Srectype  string
-	Startaddr uint32
+	Entryaddr uint32
 	Checksum  byte
 }
 
