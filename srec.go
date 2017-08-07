@@ -95,11 +95,12 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	if err != nil {
 		return err
 	}
+	lengthStrLen, err := getLengthStrLen(sl)
 
 	len, _ = strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	addr, _ = strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
 	data = make([]byte, 0)
-	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+((int(len)*2)-CSumFieldStrLen); i += 2 {
+	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(lengthStrLen-CSumFieldStrLen); i += 2 {
 		b, _ := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
 		data = append(data, byte(b))
 	}
@@ -124,6 +125,11 @@ func getAddrStrLen(srectype string) (int, error) {
 	default:
 		return 0, fmt.Errorf("%s is not srectype", srectype)
 	}
+}
+
+func getLengthStrLen(sl []string) (int, error) {
+	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
+	return int(len * 2), err
 }
 
 func (sr *Srec) GetBytes(ByteSize uint32) []byte {
