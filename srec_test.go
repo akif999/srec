@@ -10,7 +10,7 @@ const ()
 
 var ()
 
-func TestGetSrecBinaryFields(t *testing.T) {
+func TestGetSrecBinaryRecordFields(t *testing.T) {
 	t1Input := strings.Split("S11300E00000010000000100000001000000010008", "")
 	t1Want := &BinaryRecord{
 		Srectype: "S1",
@@ -32,8 +32,8 @@ func TestGetSrecBinaryFields(t *testing.T) {
 	}
 	t2Got := new(BinaryRecord)
 
-	t1Got.getSrecBinaryFields(strings.Join(t1Input[:2], ""), t1Input)
-	t2Got.getSrecBinaryFields(strings.Join(t2Input[:2], ""), t2Input)
+	t1Got.getSrecBinaryRecordFields(strings.Join(t1Input[:2], ""), t1Input)
+	t2Got.getSrecBinaryRecordFields(strings.Join(t2Input[:2], ""), t2Input)
 	if reflect.DeepEqual(t1Want, t1Got) != true {
 		t.Errorf(" got : %v\n         want : %v", t1Want, t1Got)
 	}
