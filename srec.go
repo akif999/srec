@@ -103,6 +103,9 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 		return err
 	}
 	rec.Checksum, err = getChecksum(srectype, sl)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
