@@ -81,10 +81,6 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 			// pass S4~6
 		}
 	}
-	srs.StartAddress = getStartAddr(srs)
-	srs.EndAddress = getEndAddr(srs)
-	LastRecordDatalen := getLastRecordDataLen(srs)
-	srs.makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
@@ -217,12 +213,13 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 	return nil
 }
 
-func (sr *Srec) GetBytes() []byte {
-	var bytes []byte
-	for _, br := range sr.BinaryRecords {
-		for _, b := range br.Data {
-			bytes = append(bytes, b)
-		}
+func (sr *Srec) GetBytes() ([]byte, error) {
+	sr.StartAddress = getStartAddr(sr)
+	sr.EndAddress = getEndAddr(sr)
+	LastRecordDatalen := getLastRecordDataLen(sr)
+	err := sr.makePaddedBytes(sr.StartAddress, sr.EndAddress, LastRecordDatalen)
+	if err != nil {
+		return sr.Bytes, err
 	}
-	return bytes
+	return sr.Bytes, err
 }
