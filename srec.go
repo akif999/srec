@@ -88,28 +88,24 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
 	var len uint64
 	var addr uint64
-	var data []byte
 	var csum uint64
 
 	addrStrLen, err := getAddrStrLen(srectype)
 	if err != nil {
 		return err
 	}
-	lengthStrLen, err := getLengthStrLen(sl)
 
 	len, _ = strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	addr, _ = strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
-	data = make([]byte, 0)
-	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(lengthStrLen-CSumFieldStrLen); i += 2 {
-		b, _ := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
-		data = append(data, byte(b))
-	}
 	csum, _ = strconv.ParseUint(strings.Join(sl[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
 
 	rec.Srectype = srectype
 	rec.Length = uint32(len)
 	rec.Address = uint32(addr)
-	rec.Data = data
+	rec.Data, err = getData(addrStrLen, sl)
+	if err != nil {
+		return err
+	}
 	rec.Checksum = byte(csum)
 	return nil
 }
@@ -125,6 +121,23 @@ func getAddrStrLen(srectype string) (int, error) {
 	default:
 		return 0, fmt.Errorf("%s is not srectype", srectype)
 	}
+}
+
+func getData(addrStrLen int, sl []string) ([]byte, error) {
+	lengthStrLen, err := getLengthStrLen(sl)
+	if err != nil {
+		return []byte{}, err
+	}
+
+	data := make([]byte, 0)
+	for i := (TypeFieldStrLen + LengthFieldStrLen + addrStrLen); i < (TypeFieldStrLen+LengthFieldStrLen)+(lengthStrLen-CSumFieldStrLen); i += 2 {
+		b, err := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
+		if err != nil {
+			return []byte{}, err
+		}
+		data = append(data, byte(b))
+	}
+	return data, nil
 }
 
 func getLengthStrLen(sl []string) (int, error) {
