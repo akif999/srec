@@ -86,7 +86,6 @@ func (srs *Srec) ParseFile(fileReader io.Reader) {
 }
 
 func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
-	var addr uint64
 	// var csum uint64
 
 	addrStrLen, err := getAddrStrLen(srectype)
@@ -94,7 +93,6 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 		return err
 	}
 
-	addr, _ = strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
 	// csum, _ = strconv.ParseUint(strings.Join(sl[4+(int(len)*2)-2:(4+(int(len)*2)-2)+2], ""), 16, 32)
 
 	rec.Srectype = srectype
@@ -102,7 +100,10 @@ func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string)
 	if err != nil {
 		return err
 	}
-	rec.Address = uint32(addr)
+	rec.Address, err = getAddress(srectype, sl)
+	if err != nil {
+		return err
+	}
 	rec.Data, err = getData(addrStrLen, sl)
 	if err != nil {
 		return err
@@ -127,6 +128,18 @@ func getAddrStrLen(srectype string) (int, error) {
 func getLengthStrLen(sl []string) (int, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	return int(len * 2), err
+}
+
+func getAddress(srectype string, sl []string) (uint32, error) {
+	addrStrLen, err := getAddrStrLen(srectype)
+	if err != nil {
+		return 0, err
+	}
+	addr, err := strconv.ParseUint(strings.Join(sl[4:4+addrStrLen], ""), 16, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(addr), err
 }
 
 func getLengh(sl []string) (uint32, error) {
