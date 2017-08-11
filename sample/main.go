@@ -2,12 +2,10 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"log"
 	"os"
-	"strings"
 
 	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -47,7 +45,7 @@ func main() {
 		}
 		fmt.Printf("%02X", b)
 	}
-	fmt.Println()
+	fmt.Print("\n\n")
 
 	err = sr.SetBytes(0x000000E4, []byte{0x12, 0x34, 0x56, 0x78})
 	if err != nil {
@@ -59,39 +57,5 @@ func main() {
 			fmt.Println()
 		}
 		fmt.Printf("%02X", b)
-	}
-
-	sr2 := srec.NewSrec(c.outs, c.errs)
-	file := strings.NewReader("S113000000000100000001000000010000000100E8")
-	err = sr2.ParseFile(file)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bt2 := sr2.GetBytes()
-	for i, b := range bt2 {
-		if i%16 == 0 {
-			fmt.Println()
-		}
-		fmt.Printf("%02X", b)
-	}
-	// PrintOnlyData(srec)
-	// WriteBinaryToFile(srec, filename)
-}
-
-func PrintOnlyData(sr *srec.Srec) {
-	for _, r := range sr.BinaryRecords {
-		for _, b := range r.Data {
-			fmt.Fprintf(sr.OutStream, "%02X", b)
-		}
-		fmt.Println()
-	}
-}
-
-func WriteBinaryToFile(sr *srec.Srec, filename *string) {
-	writeFile, _ := os.OpenFile(*filename+".bin", os.O_WRONLY|os.O_CREATE, 0600)
-	writer := bufio.NewWriter(writeFile)
-	for _, r := range sr.BinaryRecords {
-		writer.Write(r.Data)
-		writer.Flush()
 	}
 }
