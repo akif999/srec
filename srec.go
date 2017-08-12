@@ -21,8 +21,6 @@ type Srec struct {
 	startAddress  uint32
 	endAddress    uint32
 	bytes         []byte
-	OutStream     io.Writer
-	ErrStream     io.Writer
 }
 
 type headerRecord struct {
@@ -46,7 +44,7 @@ type footerRecord struct {
 }
 
 func NewSrec(outs, errs io.Writer) *Srec {
-	return &Srec{OutStream: outs, ErrStream: errs}
+	return &Srec{}
 }
 
 func NewHeaderRecord() *headerRecord {
