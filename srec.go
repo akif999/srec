@@ -47,15 +47,15 @@ func NewSrec(outs, errs io.Writer) *Srec {
 	return &Srec{}
 }
 
-func NewHeaderRecord() *headerRecord {
+func newHeaderRecord() *headerRecord {
 	return &headerRecord{}
 }
 
-func NewBianryRecord() *binaryRecord {
+func newBianryRecord() *binaryRecord {
 	return &binaryRecord{}
 }
 
-func NewFooterRecord() *footerRecord {
+func newFooterRecord() *footerRecord {
 	return &footerRecord{}
 }
 
@@ -70,7 +70,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 		switch {
 		case srectype == "S0":
 		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
-			rec := NewBianryRecord()
+			rec := newBianryRecord()
 			err := rec.getSrecBinaryRecordFields(srectype, sl)
 			if err != nil {
 				return err
