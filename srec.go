@@ -235,13 +235,12 @@ func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
 	if len(sr.BinaryRecords) == 0 {
 		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
 	}
-	ofst := int(writeAddress) - int(sr.StartAddress)
+	if (writeAddress < sr.StartAddress) || (writeAddress > sr.EndAddress) {
+		return fmt.Errorf("data address 0x%08X is out of srec range", writeAddress)
+	}
+	start := int(writeAddress) - int(sr.StartAddress)
 	for i := 0; i < len(wBytes); i++ {
-		wtInd := ofst + i
-		if (wtInd < int(sr.StartAddress)) || (wtInd > int(sr.EndAddress)) {
-			return fmt.Errorf("data address 0x%08X is out of srec range", wtInd+int(sr.StartAddress))
-		}
-		sr.Bytes[wtInd] = wBytes[i]
+		sr.Bytes[start+i] = wBytes[i]
 	}
 	return nil
 }
