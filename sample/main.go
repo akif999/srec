@@ -14,7 +14,8 @@ import (
 const ()
 
 var (
-	filename = kingpin.Arg("filename", "srec file").ExistingFile()
+	filename = kingpin.Arg("Filename", "Srec filename").ExistingFile()
+	setAddr  = kingpin.Arg("SetAddress", "Address of setting Bytes").Uint32()
 )
 
 type cli struct {
@@ -47,7 +48,7 @@ func main() {
 	}
 	fmt.Print("\n\n")
 
-	err = sr.SetBytes(0x000000E4, []byte{0x12, 0x34, 0x56, 0x78})
+	err = sr.SetBytes(*setAddr, []byte{0x12, 0x34, 0x56, 0x78})
 	if err != nil {
 		log.Fatal(err)
 	}
