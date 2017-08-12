@@ -15,50 +15,50 @@ const (
 )
 
 type Srec struct {
-	HeaderRecord  HeaderRecord
-	BinaryRecords []BinaryRecord
-	FooterRecord  FooterRecord
-	StartAddress  uint32
-	EndAddress    uint32
-	Bytes         []byte
+	headerRecord  headerRecord
+	binaryRecords []binaryRecord
+	footerRecord  footerRecord
+	startAddress  uint32
+	endAddress    uint32
+	bytes         []byte
 	OutStream     io.Writer
 	ErrStream     io.Writer
 }
 
-type HeaderRecord struct {
-	Length   uint32
-	Data     []byte
-	Checksum byte
+type headerRecord struct {
+	length   uint32
+	data     []byte
+	checksum byte
 }
 
-type BinaryRecord struct {
-	Srectype string
-	Length   uint32
-	Address  uint32
-	Data     []byte
-	Checksum byte
+type binaryRecord struct {
+	srectype string
+	length   uint32
+	address  uint32
+	data     []byte
+	checksum byte
 }
 
-type FooterRecord struct {
-	Srectype  string
-	EntryAddr uint32
-	Checksum  byte
+type footerRecord struct {
+	srectype  string
+	entryAddr uint32
+	checksum  byte
 }
 
 func NewSrec(outs, errs io.Writer) *Srec {
 	return &Srec{OutStream: outs, ErrStream: errs}
 }
 
-func NewHeaderRecord() *HeaderRecord {
-	return &HeaderRecord{}
+func NewHeaderRecord() *headerRecord {
+	return &headerRecord{}
 }
 
-func NewBianryRecord() *BinaryRecord {
-	return &BinaryRecord{}
+func NewBianryRecord() *binaryRecord {
+	return &binaryRecord{}
 }
 
-func NewFooterRecord() *FooterRecord {
-	return &FooterRecord{}
+func NewFooterRecord() *footerRecord {
+	return &footerRecord{}
 }
 
 func (srs *Srec) ParseFile(fileReader io.Reader) error {
@@ -77,42 +77,42 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			if err != nil {
 				return err
 			}
-			srs.BinaryRecords = append(srs.BinaryRecords, *rec)
+			srs.binaryRecords = append(srs.binaryRecords, *rec)
 		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
 		default:
 			// pass S4~6
 		}
 	}
-	if len(srs.BinaryRecords) == 0 {
+	if len(srs.binaryRecords) == 0 {
 		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
 	}
-	srs.StartAddress = getStartAddr(srs)
-	srs.EndAddress = getEndAddr(srs)
+	srs.startAddress = getStartAddr(srs)
+	srs.endAddress = getEndAddr(srs)
 	LastRecordDatalen := getLastRecordDataLen(srs)
-	err := srs.makePaddedBytes(srs.StartAddress, srs.EndAddress, LastRecordDatalen)
+	err := srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (rec *BinaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
+func (rec *binaryRecord) getSrecBinaryRecordFields(srectype string, sl []string) error {
 	var err error
 
-	rec.Srectype = srectype
-	rec.Length, err = getLengh(sl)
+	rec.srectype = srectype
+	rec.length, err = getLengh(sl)
 	if err != nil {
 		return err
 	}
-	rec.Address, err = getAddress(srectype, sl)
+	rec.address, err = getAddress(srectype, sl)
 	if err != nil {
 		return err
 	}
-	rec.Data, err = getData(srectype, sl)
+	rec.data, err = getData(srectype, sl)
 	if err != nil {
 		return err
 	}
-	rec.Checksum, err = getChecksum(srectype, sl)
+	rec.checksum, err = getChecksum(srectype, sl)
 	if err != nil {
 		return err
 	}
@@ -196,50 +196,50 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 }
 
 func (sr *Srec) GetBytes() []byte {
-	return sr.Bytes
+	return sr.bytes
 }
 
 func getStartAddr(sr *Srec) uint32 {
-	return sr.BinaryRecords[0].Address
+	return sr.binaryRecords[0].address
 }
 
 func getEndAddr(sr *Srec) uint32 {
-	return sr.BinaryRecords[len(sr.BinaryRecords)-1].Address
+	return sr.binaryRecords[len(sr.binaryRecords)-1].address
 }
 
 func getLastRecordDataLen(sr *Srec) uint32 {
-	len := len(sr.BinaryRecords[len(sr.BinaryRecords)-1].Data)
+	len := len(sr.binaryRecords[len(sr.binaryRecords)-1].data)
 	return uint32(len)
 }
 
 func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) error {
 	size := (endAddr - startAddr) + lastRecordDataLen
 	for i := 0; i < int(size); i++ {
-		sr.Bytes = append(sr.Bytes, 0xFF)
+		sr.bytes = append(sr.bytes, 0xFF)
 	}
 
 	ofst := int(startAddr)
-	for _, brcs := range sr.BinaryRecords {
-		for i := 0; i < len(brcs.Data); i++ {
-			if (brcs.Address < sr.StartAddress) || (brcs.Address > sr.EndAddress) {
-				return fmt.Errorf("data address 0x%08X is out of srec range", brcs.Address)
+	for _, brcs := range sr.binaryRecords {
+		for i := 0; i < len(brcs.data); i++ {
+			if (brcs.address < sr.startAddress) || (brcs.address > sr.endAddress) {
+				return fmt.Errorf("data address 0x%08X is out of srec range", brcs.address)
 			}
-			sr.Bytes[(int(brcs.Address)-ofst)+i] = brcs.Data[i]
+			sr.bytes[(int(brcs.address)-ofst)+i] = brcs.data[i]
 		}
 	}
 	return nil
 }
 
 func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
-	if len(sr.BinaryRecords) == 0 {
+	if len(sr.binaryRecords) == 0 {
 		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
 	}
-	if (writeAddress < sr.StartAddress) || (writeAddress > sr.EndAddress) {
+	if (writeAddress < sr.startAddress) || (writeAddress > sr.endAddress) {
 		return fmt.Errorf("data address 0x%08X is out of srec range", writeAddress)
 	}
-	start := int(writeAddress) - int(sr.StartAddress)
+	start := int(writeAddress) - int(sr.startAddress)
 	for i := 0; i < len(wBytes); i++ {
-		sr.Bytes[start+i] = wBytes[i]
+		sr.bytes[start+i] = wBytes[i]
 	}
 	return nil
 }
