@@ -12,25 +12,25 @@ var ()
 
 func TestGetSrecBinaryRecordFields(t *testing.T) {
 	t1Input := strings.Split("S11300E00000010000000100000001000000010008", "")
-	t1Want := &BinaryRecord{
-		Srectype: "S1",
-		Length:   0x13,
-		Address:  0x00E0,
-		Data: []byte{0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00,
+	t1Want := &binaryRecord{
+		srectype: "S1",
+		length:   0x13,
+		address:  0x00E0,
+		data: []byte{0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00,
 			0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x00},
-		Checksum: 0x08,
+		checksum: 0x08,
 	}
-	t1Got := new(BinaryRecord)
+	t1Got := new(binaryRecord)
 
 	t2Input := strings.Split("S10700F00000010007", "")
-	t2Want := &BinaryRecord{
-		Srectype: "S1",
-		Length:   0x07,
-		Address:  0x00F0,
-		Data:     []byte{0x00, 0x00, 0x01, 0x00},
-		Checksum: 0x07,
+	t2Want := &binaryRecord{
+		srectype: "S1",
+		length:   0x07,
+		address:  0x00F0,
+		data:     []byte{0x00, 0x00, 0x01, 0x00},
+		checksum: 0x07,
 	}
-	t2Got := new(BinaryRecord)
+	t2Got := new(binaryRecord)
 
 	t1Got.getSrecBinaryRecordFields(strings.Join(t1Input[:2], ""), t1Input)
 	t2Got.getSrecBinaryRecordFields(strings.Join(t2Input[:2], ""), t2Input)
