@@ -63,8 +63,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	scanner := bufio.NewScanner(fileReader)
 
 	for scanner.Scan() {
-		line := scanner.Text()
-		splitedLine := strings.Split(line, "")
+		splitedLine := strings.Split(scanner.Text(), "")
 
 		srectype := strings.Join(splitedLine[:2], "")
 		switch {
