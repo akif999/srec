@@ -64,14 +64,14 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		sl := strings.Split(line, "")
+		splitedLine := strings.Split(line, "")
 
-		srectype := strings.Join(sl[:2], "")
+		srectype := strings.Join(splitedLine[:2], "")
 		switch {
 		case srectype == "S0":
 		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
 			rec := newBianryRecord()
-			err := rec.getSrecBinaryRecordFields(srectype, sl)
+			err := rec.getSrecBinaryRecordFields(srectype, splitedLine)
 			if err != nil {
 				return err
 			}
