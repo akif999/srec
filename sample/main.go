@@ -3,7 +3,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 
@@ -18,14 +17,8 @@ var (
 	setAddr  = kingpin.Arg("SetAddress", "Address of setting Bytes").Uint32()
 )
 
-type cli struct {
-	outs io.Writer
-	errs io.Writer
-}
-
 func main() {
-	c := &cli{outs: os.Stdout, errs: os.Stderr}
-	sr := srec.NewSrec(c.outs, c.errs)
+	sr := srec.NewSrec()
 
 	kingpin.Parse()
 
