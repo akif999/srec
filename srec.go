@@ -80,11 +80,12 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			// pass S4~6
 		}
 	}
-	if len(srs.binaryRecords) == 0 {
-		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
-	}
 
-	err := srs.checkAddrOrder()
+	err := srs.isBinaryRecordExists()
+	if err != nil {
+		return err
+	}
+	err = srs.checkAddrOrder()
 	if err != nil {
 		return err
 	}
@@ -200,6 +201,13 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 
 func (sr *Srec) GetBytes() []byte {
 	return sr.bytes
+}
+
+func (sr *Srec) isBinaryRecordExists() error {
+	if len(sr.binaryRecords) == 0 {
+		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
+	}
+	return nil
 }
 
 func (sr *Srec) checkAddrOrder() error {
