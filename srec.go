@@ -93,6 +93,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	srs.startAddress = getStartAddr(srs)
 	srs.endAddress = getEndAddr(srs)
 	LastRecordDatalen := getLastRecordDataLen(srs)
+
 	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
 	if err != nil {
 		return err
