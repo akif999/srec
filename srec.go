@@ -43,7 +43,7 @@ type footerRecord struct {
 	checksum  byte
 }
 
-func NewSrec(outs, errs io.Writer) *Srec {
+func NewSrec() *Srec {
 	return &Srec{}
 }
 
