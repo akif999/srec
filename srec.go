@@ -83,10 +83,16 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	if len(srs.binaryRecords) == 0 {
 		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
 	}
+
+	err := srs.checkAddrOrder()
+	if err != nil {
+		return err
+	}
+
 	srs.startAddress = getStartAddr(srs)
 	srs.endAddress = getEndAddr(srs)
 	LastRecordDatalen := getLastRecordDataLen(srs)
-	err := srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
+	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
 	if err != nil {
 		return err
 	}
@@ -194,6 +200,20 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 
 func (sr *Srec) GetBytes() []byte {
 	return sr.bytes
+}
+
+func (sr *Srec) checkAddrOrder() error {
+	var prevAddr uint32
+	for i, brec := range sr.binaryRecords {
+		if i == 0 {
+			continue
+		}
+		if brec.address < prevAddr {
+			return fmt.Errorf("Address is not serires")
+		}
+		prevAddr = brec.address
+	}
+	return nil
 }
 
 func getStartAddr(sr *Srec) uint32 {
