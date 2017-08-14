@@ -1,4 +1,3 @@
-// this source code is sample of package srec
 package main
 
 import (
@@ -9,8 +8,6 @@ import (
 	"github.com/AKIF999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
-
-const ()
 
 var (
 	filename = kingpin.Arg("Filename", "Srec filename").ExistingFile()
