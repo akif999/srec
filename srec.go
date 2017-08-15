@@ -85,7 +85,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	if err != nil {
 		return err
 	}
-	err = srs.checkAddrOrder()
+	err = srs.isAddrAcending()
 	if err != nil {
 		return err
 	}
@@ -211,14 +211,14 @@ func (sr *Srec) isBinaryRecordExists() error {
 	return nil
 }
 
-func (sr *Srec) checkAddrOrder() error {
+func (sr *Srec) isAddrAcending() error {
 	var prevAddr uint32
 	for i, brec := range sr.binaryRecords {
 		if i == 0 {
 			continue
 		}
 		if brec.address < prevAddr {
-			return fmt.Errorf("Address is not serires")
+			return fmt.Errorf("Address is not acending order")
 		}
 		prevAddr = brec.address
 	}
