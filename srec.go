@@ -133,7 +133,7 @@ func getAddrLenAsStr(srectype string) (int, error) {
 	case "S3":
 		return 8, nil
 	default:
-		return 0, fmt.Errorf("%s is not srectype", srectype)
+		return 0, fmt.Errorf("%s is not srectype.", srectype)
 	}
 }
 
@@ -206,7 +206,7 @@ func (sr *Srec) GetBytes() []byte {
 
 func (sr *Srec) isDataRecordExists() error {
 	if len(sr.dataRecords) == 0 {
-		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
+		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records.")
 	}
 	return nil
 }
@@ -218,7 +218,7 @@ func (sr *Srec) isAddrAcending() error {
 			continue
 		}
 		if brec.address < prevAddr {
-			return fmt.Errorf("Address is not acending order")
+			return fmt.Errorf("Address is not acending order.")
 		}
 		prevAddr = brec.address
 	}
@@ -248,7 +248,7 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 	for _, brcs := range sr.dataRecords {
 		for i := 0; i < len(brcs.data); i++ {
 			if (brcs.address < sr.startAddress) || (brcs.address > sr.endAddress) {
-				return fmt.Errorf("data address 0x%08X is out of srec range", brcs.address)
+				return fmt.Errorf("data address 0x%08X is out of srec range.", brcs.address)
 			}
 			sr.bytes[(int(brcs.address)-ofst)+i] = brcs.data[i]
 		}
@@ -258,10 +258,10 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 
 func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
 	if len(sr.dataRecords) == 0 {
-		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records")
+		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records.")
 	}
 	if (writeAddress < sr.startAddress) || (writeAddress > sr.endAddress) {
-		return fmt.Errorf("data address 0x%08X is out of srec range", writeAddress)
+		return fmt.Errorf("data address 0x%08X is out of srec range.", writeAddress)
 	}
 	start := int(writeAddress) - int(sr.startAddress)
 	for i := 0; i < len(wBytes); i++ {
