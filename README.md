@@ -2,13 +2,13 @@
 A library of Motolola Hex(S Record, *.mot, *mhx) file utilities
 
 ## Usage
-Now, you can use two interfaces,`GetBytes()` and `SetBytes()`
+Now, you can use two interfaces,`Bytes()` and `SetBytes()`
 
 ```go
 srec := srec.NewSrec()
 
 srec.ParseFile(fp)
-srec.GetBytes()    // it returns all of srec data bytes. you can do this by address in next step
+srec.Bytes()    // it returns all of srec data bytes. you can do this by address in next step
 srec.SetBytes(0x00123456, []byte{0x12, 34, 56, 78})
 ```
 
@@ -45,7 +45,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt := sr.GetBytes()
+	bt := sr.Bytes()
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()
@@ -58,7 +58,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt = sr.GetBytes()
+	bt = sr.Bytes()
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()

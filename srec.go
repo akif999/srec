@@ -252,7 +252,7 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 	return nil
 }
 
-func (sr *Srec) GetBytes() []byte {
+func (sr *Srec) Bytes() []byte {
 	return sr.dataBytes
 }
 
