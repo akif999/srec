@@ -10,7 +10,7 @@ const ()
 
 var ()
 
-func TestGetSrecBinaryRecordFields(t *testing.T) {
+func TestGetDataRecordFields(t *testing.T) {
 	t1Input := strings.Split("S11300E00000010000000100000001000000010008", "")
 	t1Want := &dataRecord{
 		srectype: "S1",
