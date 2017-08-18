@@ -20,7 +20,7 @@ type Srec struct {
 	footerRecord footerRecord
 	startAddress uint32
 	endAddress   uint32
-	bytes        []byte
+	dataBytes    []byte
 }
 
 type headerRecord struct {
@@ -237,7 +237,7 @@ func getLastRecordDataLen(sr *Srec) uint32 {
 func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) error {
 	size := (endAddr - startAddr) + lastRecordDataLen
 	for i := 0; i < int(size); i++ {
-		sr.bytes = append(sr.bytes, 0xFF)
+		sr.dataBytes = append(sr.dataBytes, 0xFF)
 	}
 
 	ofst := int(startAddr)
@@ -246,14 +246,14 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 			if (brcs.address < sr.startAddress) || (brcs.address > sr.endAddress) {
 				return fmt.Errorf("data address 0x%08X is out of srec range.", brcs.address)
 			}
-			sr.bytes[(int(brcs.address)-ofst)+i] = brcs.data[i]
+			sr.dataBytes[(int(brcs.address)-ofst)+i] = brcs.data[i]
 		}
 	}
 	return nil
 }
 
 func (sr *Srec) GetBytes() []byte {
-	return sr.bytes
+	return sr.dataBytes
 }
 
 func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
@@ -265,7 +265,7 @@ func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
 	}
 	start := int(writeAddress) - int(sr.startAddress)
 	for i := 0; i < len(wBytes); i++ {
-		sr.bytes[start+i] = wBytes[i]
+		sr.dataBytes[start+i] = wBytes[i]
 	}
 	return nil
 }
