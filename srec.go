@@ -200,10 +200,6 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 	return byte(csum), nil
 }
 
-func (sr *Srec) GetBytes() []byte {
-	return sr.bytes
-}
-
 func (sr *Srec) isDataRecordExists() error {
 	if len(sr.dataRecords) == 0 {
 		return fmt.Errorf("byte data is empty. call PaeseFile() or maybe srec file has no S1~3 records.")
@@ -254,6 +250,10 @@ func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordData
 		}
 	}
 	return nil
+}
+
+func (sr *Srec) GetBytes() []byte {
+	return sr.bytes
 }
 
 func (sr *Srec) SetBytes(writeAddress uint32, wBytes []byte) error {
