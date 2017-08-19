@@ -15,9 +15,9 @@ const (
 )
 
 type Srec struct {
-	headerRecord headerRecord
+	headerRecord *headerRecord
 	dataRecords  []dataRecord
-	footerRecord footerRecord
+	footerRecord *footerRecord
 	startAddress uint32
 	endAddress   uint32
 	dataBytes    []byte
@@ -68,6 +68,12 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 		srectype := strings.Join(splitedLine[:2], "")
 		switch {
 		case srectype == "S0":
+			rec := newHeaderRecord()
+			err := rec.getHeaderRecordFields(splitedLine)
+			if err != nil {
+				return err
+			}
+			srs.headerRecord = rec
 		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
 			rec := newBianryRecord()
 			err := rec.getDataRecordFields(srectype, splitedLine)
@@ -101,6 +107,25 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	return nil
 }
 
+func (rec *headerRecord) getHeaderRecordFields(sl []string) error {
+	var err error
+
+	srectype := "S0"
+	rec.length, err = getLengh(sl)
+	if err != nil {
+		return err
+	}
+	rec.data, err = getData(srectype, sl)
+	if err != nil {
+		return err
+	}
+	rec.checksum, err = getChecksum(srectype, sl)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
 	var err error
 
@@ -126,6 +151,8 @@ func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
 
 func getAddrLenAsStr(srectype string) (int, error) {
 	switch srectype {
+	case "S0":
+		return 4, nil
 	case "S1":
 		return 4, nil
 	case "S2":
