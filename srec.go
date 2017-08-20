@@ -180,7 +180,7 @@ func getLengh(sl []string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	return uint32(len), err
+	return uint32(len), nil
 }
 
 func getAddress(srectype string, sl []string) (uint32, error) {
@@ -192,7 +192,7 @@ func getAddress(srectype string, sl []string) (uint32, error) {
 	if err != nil {
 		return 0, err
 	}
-	return uint32(addr), err
+	return uint32(addr), nil
 }
 
 func getData(srectype string, sl []string) ([]byte, error) {
