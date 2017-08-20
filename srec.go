@@ -39,6 +39,7 @@ type dataRecord struct {
 
 type footerRecord struct {
 	srectype  string
+	length    uint32
 	entryAddr uint32
 	checksum  byte
 }
@@ -82,6 +83,12 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			}
 			srs.dataRecords = append(srs.dataRecords, rec)
 		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
+			rec := newFooterRecord()
+			err := rec.getFooterRecordFields(srectype, splitedLine)
+			if err != nil {
+				return err
+			}
+			srs.footerRecord = rec
 		default:
 			// pass S4~6
 		}
@@ -149,6 +156,25 @@ func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
 	return nil
 }
 
+func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) error {
+	var err error
+
+	rec.srectype = srectype
+	rec.length, err = getLengh(sl)
+	if err != nil {
+		return err
+	}
+	rec.entryAddr, err = getAddress(srectype, sl)
+	if err != nil {
+		return err
+	}
+	rec.checksum, err = getChecksum(srectype, sl)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func getAddrLenAsStr(srectype string) (int, error) {
 	switch srectype {
 	case "S0":
@@ -159,6 +185,12 @@ func getAddrLenAsStr(srectype string) (int, error) {
 		return 6, nil
 	case "S3":
 		return 8, nil
+	case "S7":
+		return 8, nil
+	case "S8":
+		return 6, nil
+	case "S9":
+		return 4, nil
 	default:
 		return 0, fmt.Errorf("%s is not srectype.", srectype)
 	}
