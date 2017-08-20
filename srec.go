@@ -16,7 +16,7 @@ const (
 
 type Srec struct {
 	headerRecord *headerRecord
-	dataRecords  []dataRecord
+	dataRecords  []*dataRecord
 	footerRecord *footerRecord
 	startAddress uint32
 	endAddress   uint32
@@ -80,7 +80,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			if err != nil {
 				return err
 			}
-			srs.dataRecords = append(srs.dataRecords, *rec)
+			srs.dataRecords = append(srs.dataRecords, rec)
 		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
 		default:
 			// pass S4~6
