@@ -201,6 +201,14 @@ func getDataLenAsStr(sl []string) (int, error) {
 	return int(len * 2), err
 }
 
+func getLengh(sl []string) (uint32, error) {
+	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
+	if err != nil {
+		return 0, err
+	}
+	return uint32(len), err
+}
+
 func getAddress(srectype string, sl []string) (uint32, error) {
 	addrLenAsStr, err := getAddrLenAsStr(srectype)
 	if err != nil {
@@ -211,14 +219,6 @@ func getAddress(srectype string, sl []string) (uint32, error) {
 		return 0, err
 	}
 	return uint32(addr), err
-}
-
-func getLengh(sl []string) (uint32, error) {
-	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(len), err
 }
 
 func getData(srectype string, sl []string) ([]byte, error) {
