@@ -175,32 +175,6 @@ func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) err
 	return nil
 }
 
-func getAddrLenAsStr(srectype string) (int, error) {
-	switch srectype {
-	case "S0":
-		return 4, nil
-	case "S1":
-		return 4, nil
-	case "S2":
-		return 6, nil
-	case "S3":
-		return 8, nil
-	case "S7":
-		return 8, nil
-	case "S8":
-		return 6, nil
-	case "S9":
-		return 4, nil
-	default:
-		return 0, fmt.Errorf("%s is not srectype.", srectype)
-	}
-}
-
-func getDataLenAsStr(sl []string) (int, error) {
-	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
-	return int(len * 2), err
-}
-
 func getLengh(sl []string) (uint32, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	if err != nil {
@@ -257,6 +231,32 @@ func getChecksum(srectype string, sl []string) (byte, error) {
 		return 0, err
 	}
 	return byte(csum), nil
+}
+
+func getAddrLenAsStr(srectype string) (int, error) {
+	switch srectype {
+	case "S0":
+		return 4, nil
+	case "S1":
+		return 4, nil
+	case "S2":
+		return 6, nil
+	case "S3":
+		return 8, nil
+	case "S7":
+		return 8, nil
+	case "S8":
+		return 6, nil
+	case "S9":
+		return 4, nil
+	default:
+		return 0, fmt.Errorf("%s is not srectype.", srectype)
+	}
+}
+
+func getDataLenAsStr(sl []string) (int, error) {
+	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
+	return int(len * 2), err
 }
 
 func (sr *Srec) isDataRecordExists() error {
