@@ -35,6 +35,8 @@ type dataRecord struct {
 	address  uint32
 	data     []byte
 	checksum uint8
+
+	isBlank bool
 }
 
 type footerRecord struct {
@@ -85,6 +87,45 @@ func getDataLenAsStr(sl []string) (int, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	return int(len * 2), err
 }
+
+func calcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, error) {
+	fs := ""
+	switch srectype {
+	case "S1":
+		fs = fmt.Sprintf("%02X%04X", len, addr)
+	case "S2":
+		fs = fmt.Sprintf("%02X%06X", len, addr)
+	case "S3":
+		fs = fmt.Sprintf("%02X%08X", len, addr)
+	default:
+	}
+	for _, b := range data {
+		fs += fmt.Sprintf("%02X", b)
+	}
+	bs, err := strToBytes(fs)
+	if err != nil {
+		return 0, err
+	}
+	sum := byte(0)
+	for _, b := range bs {
+		sum += b
+	}
+	return uint8(^sum), nil
+}
+
+func strToBytes(src string) ([]byte, error) {
+	sp := strings.Split(src, "")
+	bs := []byte{}
+	for i := 0; i < len(sp); i += 2 {
+		b, err := strconv.ParseUint(sp[i]+sp[i+1], 16, 32)
+		if err != nil {
+			return []byte{}, err
+		}
+		bs = append(bs, byte(b))
+	}
+	return bs, nil
+}
+
 func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	scanner := bufio.NewScanner(fileReader)
 
@@ -132,6 +173,11 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 	srs.endAddress = getEndAddr(srs)
 	LastRecordDatalen := getLastRecordDataLen(srs)
 
+	err = srs.addBlankRecord()
+	if err != nil {
+		return err
+	}
+
 	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
 	if err != nil {
 		return err
@@ -178,6 +224,7 @@ func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
 	if err != nil {
 		return err
 	}
+	rec.isBlank = false
 	return nil
 }
 
@@ -290,6 +337,61 @@ func getEndAddr(sr *Srec) uint32 {
 func getLastRecordDataLen(sr *Srec) uint32 {
 	len := len(sr.dataRecords[len(sr.dataRecords)-1].data)
 	return uint32(len)
+}
+
+func (sr *Srec) addBlankRecord() error {
+	size := len(sr.dataRecords)
+	for i := 0; i < size; i++ {
+		if i == size-1 {
+			break
+		}
+		if sr.dataRecords[i].isBlank {
+			continue
+		}
+		cr := sr.dataRecords[i]
+		nr := sr.dataRecords[i+1]
+		blankSize := (nr.address) - (cr.address + uint32(len(cr.data)))
+		if blankSize != 0 {
+			addr := cr.address + uint32(len(cr.data))
+			for blankSize != 0 {
+				dataSize := uint32(16)
+				if blankSize < 16 {
+					dataSize = blankSize
+				}
+				r, err := makeBlankRecord(cr.srectype, addr, dataSize)
+				if err != nil {
+					return err
+				}
+				sr.dataRecords = append(sr.dataRecords[:i+2], sr.dataRecords[i+1:]...)
+				sr.dataRecords[i+1] = r
+				blankSize -= dataSize
+				addr += dataSize
+				i++
+			}
+			size = len(sr.dataRecords)
+		}
+	}
+	return nil
+}
+
+func makeBlankRecord(srectype string, addr uint32, dataSize uint32) (*dataRecord, error) {
+	r := newDataRecord()
+	r.srectype = srectype
+	l, err := getAddrLenAsStr(srectype)
+	if err != nil {
+		return nil, err
+	}
+	r.length = uint8(l) + uint8(dataSize*2)
+	r.address = addr
+	for i := 0; i < int(dataSize); i++ {
+		r.data = append(r.data, 0xFF)
+	}
+	r.checksum, err = calcChecksum(r.srectype, r.length, r.address, r.data)
+	if err != nil {
+		return nil, err
+	}
+	r.isBlank = true
+	return r, nil
 }
 
 func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) error {
