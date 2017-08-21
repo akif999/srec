@@ -15,12 +15,13 @@ const (
 )
 
 type Srec struct {
-	headerRecord *headerRecord
-	dataRecords  []*dataRecord
-	footerRecord *footerRecord
-	startAddress uint32
-	endAddress   uint32
-	dataBytes    []byte
+	headerRecord      *headerRecord
+	dataRecords       []*dataRecord
+	footerRecord      *footerRecord
+	startAddress      uint32
+	endAddress        uint32
+	lastRecordDataLen uint8
+	dataBytes         []byte
 }
 
 type headerRecord struct {
@@ -171,14 +172,14 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 
 	srs.startAddress = getStartAddr(srs)
 	srs.endAddress = getEndAddr(srs)
-	LastRecordDatalen := getLastRecordDataLen(srs)
+	srs.lastRecordDataLen = getLastRecordDataLen(srs)
 
 	err = srs.addBlankRecord()
 	if err != nil {
 		return err
 	}
 
-	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, LastRecordDatalen)
+	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, srs.lastRecordDataLen)
 	if err != nil {
 		return err
 	}
@@ -334,9 +335,9 @@ func getEndAddr(sr *Srec) uint32 {
 	return sr.dataRecords[len(sr.dataRecords)-1].address
 }
 
-func getLastRecordDataLen(sr *Srec) uint32 {
+func getLastRecordDataLen(sr *Srec) uint8 {
 	len := len(sr.dataRecords[len(sr.dataRecords)-1].data)
-	return uint32(len)
+	return uint8(len)
 }
 
 func (sr *Srec) addBlankRecord() error {
@@ -394,8 +395,8 @@ func makeBlankRecord(srectype string, addr uint32, dataSize uint32) (*dataRecord
 	return r, nil
 }
 
-func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint32) error {
-	size := (endAddr - startAddr) + lastRecordDataLen
+func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint8) error {
+	size := (endAddr - startAddr) + uint32(lastRecordDataLen)
 	for i := 0; i < int(size); i++ {
 		sr.dataBytes = append(sr.dataBytes, 0xFF)
 	}
