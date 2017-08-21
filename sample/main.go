@@ -29,7 +29,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt := sr.Bytes()
+	bt, err := sr.Bytes()
+	if err != nil {
+		log.Fatal(err)
+	}
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()
@@ -42,7 +45,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt = sr.Bytes()
+	bt, err = sr.Bytes()
+	if err != nil {
+		log.Fatal(err)
+	}
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()

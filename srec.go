@@ -260,7 +260,7 @@ func getChecksum(srectype string, sl []string) (uint8, error) {
 
 func (sr *Srec) isDataRecordExists() error {
 	if len(sr.dataRecords) == 0 {
-		return fmt.Errorf("byte data is empty. srec file has no S1~3 records.")
+		return fmt.Errorf("byte data is empty. srec file doesn't have S1~3 records.")
 	}
 	return nil
 }
