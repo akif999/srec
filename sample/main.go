@@ -31,16 +31,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt := sr.Bytes()
-	for i, b := range bt {
-		if i != 0 && i%16 == 0 {
-			fmt.Println()
-		}
-		fmt.Printf("%02X", b)
-	}
-	fmt.Print("\n\n")
 
-	err = sr.SetBytes(*setAddr, []byte{0x12, 0x34, 0x56, 0x78})
+	bt := sr.Bytes()
+	printBytes(bt)
+	fmt.Print("\n")
+
+	b := []byte{}
+	for i := 0; i < 32; i++ {
+		b = append(b, 0x88)
+	}
+	err = sr.SetBytes(*setAddr, b)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -48,14 +48,20 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	printBytes(bt)
+	fmt.Print("\n")
+
+	sr.UpdateInPart(0x00E0, 0x00FF)
+	fs := sr.Format()
+	fmt.Print(fs)
+}
+
+func printBytes(bt []byte) {
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()
 		}
 		fmt.Printf("%02X", b)
 	}
-	fmt.Print("\n\n")
-
-	fs := sr.Format()
-	fmt.Print(fs)
+	fmt.Print("\n")
 }
