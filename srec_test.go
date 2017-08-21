@@ -10,6 +10,30 @@ const ()
 
 var ()
 
+func TestCalcChecksum(t *testing.T) {
+	type tp struct {
+		srectype string
+		len      uint8
+		addr     uint32
+		data     []byte
+		want     uint8
+		got      uint8
+	}
+	t1 := new(tp)
+	t1.srectype = "S1"
+	t1.len = 0x13
+	t1.addr = 0x0100
+	t1.data = []byte{
+		0x7A, 0x07, 0x00, 0x0F, 0xFF, 0x0E, 0x7A, 0x00,
+		0x00, 0x00, 0x01, 0x62, 0x7A, 0x01, 0x00, 0x0F,
+	}
+	t1.want = 0xE7
+	t1.got, _ = calcChecksum(t1.srectype, t1.len, t1.addr, t1.data)
+	if t1.got != t1.want {
+		t.Errorf(" got : %02X\n         want : %02X", t1.got, t1.want)
+	}
+}
+
 func TestGetDataRecordFields(t *testing.T) {
 	t1Input := strings.Split("S11300E00000010000000100000001000000010008", "")
 	t1Want := &dataRecord{
