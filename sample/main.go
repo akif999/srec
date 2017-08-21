@@ -54,4 +54,8 @@ func main() {
 		}
 		fmt.Printf("%02X", b)
 	}
+	fmt.Print("\n\n")
+
+	fs := sr.Format()
+	fmt.Print(fs)
 }
