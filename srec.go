@@ -26,7 +26,7 @@ type Srec struct {
 type headerRecord struct {
 	length   uint32
 	data     []byte
-	checksum byte
+	checksum uint8
 }
 
 type dataRecord struct {
@@ -34,14 +34,14 @@ type dataRecord struct {
 	length   uint32
 	address  uint32
 	data     []byte
-	checksum byte
+	checksum uint8
 }
 
 type footerRecord struct {
 	srectype  string
 	length    uint32
 	entryAddr uint32
-	checksum  byte
+	checksum  uint8
 }
 
 func NewSrec() *Srec {
@@ -218,7 +218,7 @@ func getData(srectype string, sl []string) ([]byte, error) {
 	return data, nil
 }
 
-func getChecksum(srectype string, sl []string) (byte, error) {
+func getChecksum(srectype string, sl []string) (uint8, error) {
 	dataLenAsStr, err := getDataLenAsStr(sl)
 	if err != nil {
 		return 0, err
