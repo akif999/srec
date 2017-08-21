@@ -12,6 +12,8 @@ import (
 var (
 	filename = kingpin.Arg("Filename", "Srec filename").ExistingFile()
 	setAddr  = kingpin.Arg("SetAddress", "Address of setting Bytes").Uint32()
+	getAddr  = kingpin.Arg("GetAddress", "Address of getting Bytes").Uint32()
+	getSize  = kingpin.Arg("GetSize", "Size of getting Bytes").Uint32()
 )
 
 func main() {
@@ -42,7 +44,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt = sr.Bytes()
+	bt, err = sr.BytesInPart(*getAddr, *getSize)
+	if err != nil {
+		log.Fatal(err)
+	}
 	for i, b := range bt {
 		if i != 0 && i%16 == 0 {
 			fmt.Println()
