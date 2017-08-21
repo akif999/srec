@@ -118,7 +118,7 @@ func (rec *headerRecord) getHeaderRecordFields(sl []string) error {
 	var err error
 
 	srectype := "S0"
-	rec.length, err = getLengh(sl)
+	rec.length, err = getLength(sl)
 	if err != nil {
 		return err
 	}
@@ -137,7 +137,7 @@ func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
 	var err error
 
 	rec.srectype = srectype
-	rec.length, err = getLengh(sl)
+	rec.length, err = getLength(sl)
 	if err != nil {
 		return err
 	}
@@ -160,7 +160,7 @@ func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) err
 	var err error
 
 	rec.srectype = srectype
-	rec.length, err = getLengh(sl)
+	rec.length, err = getLength(sl)
 	if err != nil {
 		return err
 	}
@@ -175,7 +175,7 @@ func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) err
 	return nil
 }
 
-func getLengh(sl []string) (uint32, error) {
+func getLength(sl []string) (uint32, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	if err != nil {
 		return 0, err
