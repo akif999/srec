@@ -24,14 +24,14 @@ type Srec struct {
 }
 
 type headerRecord struct {
-	length   uint32
+	length   uint8
 	data     []byte
 	checksum uint8
 }
 
 type dataRecord struct {
 	srectype string
-	length   uint32
+	length   uint8
 	address  uint32
 	data     []byte
 	checksum uint8
@@ -39,7 +39,7 @@ type dataRecord struct {
 
 type footerRecord struct {
 	srectype  string
-	length    uint32
+	length    uint8
 	entryAddr uint32
 	checksum  uint8
 }
@@ -175,12 +175,12 @@ func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) err
 	return nil
 }
 
-func getLength(sl []string) (uint32, error) {
+func getLength(sl []string) (uint8, error) {
 	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
 	if err != nil {
 		return 0, err
 	}
-	return uint32(len), nil
+	return uint8(len), nil
 }
 
 func getAddress(srectype string, sl []string) (uint32, error) {
