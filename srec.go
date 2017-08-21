@@ -52,7 +52,7 @@ func newHeaderRecord() *headerRecord {
 	return &headerRecord{}
 }
 
-func newBianryRecord() *dataRecord {
+func newDataRecord() *dataRecord {
 	return &dataRecord{}
 }
 
@@ -76,7 +76,7 @@ func (srs *Srec) ParseFile(fileReader io.Reader) error {
 			}
 			srs.headerRecord = rec
 		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
-			rec := newBianryRecord()
+			rec := newDataRecord()
 			err := rec.getDataRecordFields(srectype, splitedLine)
 			if err != nil {
 				return err
