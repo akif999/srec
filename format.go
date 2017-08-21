@@ -21,6 +21,9 @@ func (r *headerRecord) formatHeader() string {
 }
 
 func (r *dataRecord) formatData() string {
+	if r.isBlank {
+		return ""
+	}
 	fs := ""
 	switch r.srectype {
 	case "S1":
