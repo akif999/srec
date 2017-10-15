@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/AKIF999/srec"
+	"github.com/akif999/srec"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 
@@ -27,41 +27,16 @@ func main() {
 	}
 	defer fp.Close()
 
-	err = sr.ParseFile(fp)
+	err = sr.Parse(fp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	bt := sr.Bytes()
-	printBytes(bt)
-	fmt.Print("\n")
-
-	b := []byte{}
-	for i := 0; i < 32; i++ {
-		b = append(b, 0x88)
-	}
-	err = sr.SetBytes(*setAddr, b)
+	nr, err := srec.MakeRec("S1", 0xFFFC, []byte{0x12, 0x34, 0x56, 0x78})
 	if err != nil {
 		log.Fatal(err)
 	}
-	bt, err = sr.BytesInPart(*getAddr, *getSize)
-	if err != nil {
-		log.Fatal(err)
-	}
-	printBytes(bt)
-	fmt.Print("\n")
+	sr.Records = append(sr.Records, nr)
 
-	sr.UpdateInPart(0x00E0, 0x00FF)
-	fs := sr.Format()
-	fmt.Print(fs)
-}
-
-func printBytes(bt []byte) {
-	for i, b := range bt {
-		if i != 0 && i%16 == 0 {
-			fmt.Println()
-		}
-		fmt.Printf("%02X", b)
-	}
-	fmt.Print("\n")
+	fmt.Print(sr.String())
 }
