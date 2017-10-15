@@ -2,413 +2,286 @@ package srec
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strconv"
-	"strings"
 )
 
+// constructed values of a field that always has a fixed length in the S record
 const (
-	TypeFieldStrLen   = 2
-	LengthFieldStrLen = 2
-	CSumFieldStrLen   = 2
+	TypeLen   = 1
+	LengthLen = 1
+	S0AddrLen = 2
+	S1AddrLen = 2
+	S2AddrLen = 3
+	S3AddrLen = 4
+	S5AddrLen = 0
+	S7AddrLen = 4
+	S8AddrLen = 3
+	S9AddrLen = 2
+	CSumLen   = 1
 )
 
+// constructed values of Maximum size per record type
+const (
+	maxSizeOfS1Addr = 0xFFFF
+	maxSizeOfS2Addr = 0xFFFFFF
+	maxSizeOfS3Addr = 0xFFFFFFFF
+)
+
+// Srec is a type of structure with multiple Record structures
 type Srec struct {
-	headerRecord      *headerRecord
-	dataRecords       []*dataRecord
-	footerRecord      *footerRecord
-	startAddress      uint32
-	endAddress        uint32
-	lastRecordDataLen uint8
-	dataBytes         []byte
+	Records []*Record
 }
 
-type headerRecord struct {
-	length   uint8
-	data     []byte
-	checksum uint8
+// Record is a type of structure that expresses S records per row
+type Record struct {
+	Srectype string
+	Length   uint8
+	Address  uint32
+	Data     []byte
+	Checksum uint8
 }
 
-type dataRecord struct {
-	srectype string
-	length   uint8
-	address  uint32
-	data     []byte
-	checksum uint8
-
-	isBlank bool
-}
-
-type footerRecord struct {
-	srectype  string
-	length    uint8
-	entryAddr uint32
-	checksum  uint8
-}
-
+// NewSrec returns a new Srec object
 func NewSrec() *Srec {
 	return &Srec{}
 }
 
-func newHeaderRecord() *headerRecord {
-	return &headerRecord{}
+// newRecord returns a new Srec object
+func newRecord() *Record {
+	return &Record{}
 }
 
-func newDataRecord() *dataRecord {
-	return &dataRecord{}
-}
-
-func newFooterRecord() *footerRecord {
-	return &footerRecord{}
-}
-
-func getAddrLenAsStr(srectype string) (int, error) {
+// getAddrLen returns the length of address for each srectype as byte length
+// S4, S6 are not handled
+func getAddrLen(srectype string) (int, error) {
 	switch srectype {
 	case "S0":
-		return 4, nil
+		return S0AddrLen, nil
 	case "S1":
-		return 4, nil
+		return S1AddrLen, nil
 	case "S2":
-		return 6, nil
+		return S2AddrLen, nil
 	case "S3":
-		return 8, nil
+		return S3AddrLen, nil
+	case "S5":
+		return S5AddrLen, nil
 	case "S7":
-		return 8, nil
+		return S7AddrLen, nil
 	case "S8":
-		return 6, nil
+		return S8AddrLen, nil
 	case "S9":
-		return 4, nil
+		return S9AddrLen, nil
 	default:
-		return 0, fmt.Errorf("%s is not srectype.", srectype)
+		return 0, fmt.Errorf("%s is not srectype", srectype)
 	}
 }
 
-func getDataLenAsStr(sl []string) (int, error) {
-	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
-	return int(len * 2), err
+// CalcChecksum calculates the checksum value of the record from the information of the arguments
+func (rec *Record) CalcChecksum() (uint8, error) {
+	return CalcChecksum(rec.Srectype, rec.Length, rec.Address, rec.Data)
 }
 
-func calcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, error) {
-	fs := ""
+// EndAddress returns endaddress of the record
+func (rec *Record) EndAddress() uint32 {
+	return rec.Address + uint32(len(rec.Data)) - 1
+}
+
+// CalcChecksum calculates the checksum value of the record from the information of the arguments
+// S4, S6 are not handled
+func CalcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, error) {
+	bytes := []byte{len}
 	switch srectype {
-	case "S1":
-		fs = fmt.Sprintf("%02X%04X", len, addr)
-	case "S2":
-		fs = fmt.Sprintf("%02X%06X", len, addr)
-	case "S3":
-		fs = fmt.Sprintf("%02X%08X", len, addr)
+	case "S0", "S1", "S9":
+		bytes = append(bytes, byte((addr&0xFF00)>>8), byte((addr&0x00FF)>>0))
+	case "S2", "S8":
+		bytes = append(bytes, byte((addr&0xFF0000)>>16), byte((addr&0x00FF00)>>8), byte((addr&0x0000FF)>>0))
+	case "S3", "S7":
+		bytes = append(bytes, byte((addr&0xFF000000)>>24), byte((addr&0x00FF0000)>>16), byte((addr&0x0000FF00)>>8), byte((addr&0x000000FF))>>0)
+	case "S5":
+		// S5はアドレス部がないため、それをbytesに加えない
 	default:
+		return 0, fmt.Errorf("%s is invalid srectype", srectype)
 	}
-	for _, b := range data {
-		fs += fmt.Sprintf("%02X", b)
-	}
-	bs, err := strToBytes(fs)
-	if err != nil {
-		return 0, err
-	}
+	bytes = append(bytes, data...)
 	sum := byte(0)
-	for _, b := range bs {
+	for _, b := range bytes {
 		sum += b
 	}
 	return uint8(^sum), nil
 }
 
-func strToBytes(src string) ([]byte, error) {
-	sp := strings.Split(src, "")
-	bs := []byte{}
-	for i := 0; i < len(sp); i += 2 {
-		b, err := strconv.ParseUint(sp[i]+sp[i+1], 16, 32)
-		if err != nil {
-			return []byte{}, err
-		}
-		bs = append(bs, byte(b))
-	}
-	return bs, nil
-}
-
-func (srs *Srec) ParseFile(fileReader io.Reader) error {
+// Parse creates a Srec object (basically an opened file) from io.Reader
+// If it contains a character string that starts with S4, S6 or does not start S [0-9] to the first 2 bytes,
+// processing stops and an error will be return
+func (srs *Srec) Parse(fileReader io.Reader) error {
 	scanner := bufio.NewScanner(fileReader)
+	scanner.Split(scanLinesCustom)
 
 	for scanner.Scan() {
-		splitedLine := strings.Split(scanner.Text(), "")
+		line := scanner.Text()
 
-		srectype := strings.Join(splitedLine[:2], "")
-		switch {
-		case srectype == "S0":
-			rec := newHeaderRecord()
-			err := rec.getHeaderRecordFields(splitedLine)
+		srectype := line[:2]
+		switch srectype {
+		case "S0", "S1", "S2", "S3", "S5", "S7", "S8", "S9":
+			rec := newRecord()
+			err := rec.getRecordFields(line)
 			if err != nil {
 				return err
 			}
-			srs.headerRecord = rec
-		case (srectype == "S1") || (srectype == "S2") || (srectype == "S3"):
-			rec := newDataRecord()
-			err := rec.getDataRecordFields(srectype, splitedLine)
-			if err != nil {
-				return err
-			}
-			srs.dataRecords = append(srs.dataRecords, rec)
-		case (srectype == "S7") || (srectype == "S8") || (srectype == "S9"):
-			rec := newFooterRecord()
-			err := rec.getFooterRecordFields(srectype, splitedLine)
-			if err != nil {
-				return err
-			}
-			srs.footerRecord = rec
+			srs.Records = append(srs.Records, rec)
 		default:
-			// pass S4~6
+			return fmt.Errorf("%s is invalid srectype", srectype)
 		}
 	}
-
-	err := srs.isDataRecordExists()
-	if err != nil {
-		return err
-	}
-	err = srs.isAddrAcending()
-	if err != nil {
-		return err
-	}
-
-	srs.startAddress = getStartAddr(srs)
-	srs.endAddress = getEndAddr(srs)
-	srs.lastRecordDataLen = getLastRecordDataLen(srs)
-
-	err = srs.addBlankRecord()
-	if err != nil {
-		return err
-	}
-
-	err = srs.makePaddedBytes(srs.startAddress, srs.endAddress, srs.lastRecordDataLen)
-	if err != nil {
-		return err
-	}
 	return nil
 }
 
-func (rec *headerRecord) getHeaderRecordFields(sl []string) error {
-	var err error
-
-	srectype := "S0"
-	rec.length, err = getLength(sl)
+// getRecordFields creates a Record object from a string
+func (rec *Record) getRecordFields(line string) error {
+	// srectype
+	stype := line[:2]
+	// srectypeに応じて、addressのフィールドの長さを取得しておく
+	addrLen, err := getAddrLen(line[:2])
 	if err != nil {
 		return err
 	}
-	rec.data, err = getData(srectype, sl)
+	dataLen, err := strconv.ParseUint(line[2:4], 16, 32)
 	if err != nil {
 		return err
 	}
-	rec.checksum, err = getChecksum(srectype, sl)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func (rec *dataRecord) getDataRecordFields(srectype string, sl []string) error {
-	var err error
-
-	rec.srectype = srectype
-	rec.length, err = getLength(sl)
-	if err != nil {
-		return err
-	}
-	rec.address, err = getAddress(srectype, sl)
-	if err != nil {
-		return err
-	}
-	rec.data, err = getData(srectype, sl)
-	if err != nil {
-		return err
-	}
-	rec.checksum, err = getChecksum(srectype, sl)
-	if err != nil {
-		return err
-	}
-	rec.isBlank = false
-	return nil
-}
-
-func (rec *footerRecord) getFooterRecordFields(srectype string, sl []string) error {
-	var err error
-
-	rec.srectype = srectype
-	rec.length, err = getLength(sl)
-	if err != nil {
-		return err
-	}
-	rec.entryAddr, err = getAddress(srectype, sl)
-	if err != nil {
-		return err
-	}
-	rec.checksum, err = getChecksum(srectype, sl)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func getLength(sl []string) (uint8, error) {
-	len, err := strconv.ParseUint(strings.Join(sl[2:4], ""), 16, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint8(len), nil
-}
-
-func getAddress(srectype string, sl []string) (uint32, error) {
-	addrLenAsStr, err := getAddrLenAsStr(srectype)
-	if err != nil {
-		return 0, err
-	}
-	addr, err := strconv.ParseUint(strings.Join(sl[4:4+addrLenAsStr], ""), 16, 32)
-	if err != nil {
-		return 0, err
-	}
-	return uint32(addr), nil
-}
-
-func getData(srectype string, sl []string) ([]byte, error) {
-	addrLenAsStr, err := getAddrLenAsStr(srectype)
-	if err != nil {
-		return []byte{}, err
-	}
-	dataLenAsStr, err := getDataLenAsStr(sl)
-	if err != nil {
-		return []byte{}, err
-	}
-
-	data := make([]byte, 0)
-	DataIndexSt := TypeFieldStrLen + LengthFieldStrLen + addrLenAsStr
-	DataIndexEd := (TypeFieldStrLen + LengthFieldStrLen) + (dataLenAsStr - CSumFieldStrLen)
-	for i := DataIndexSt; i < DataIndexEd; i += 2 {
-		b, err := strconv.ParseUint(strings.Join(sl[i:i+2], ""), 16, 32)
+	// address
+	// Since there is no address part in S5, leave the initial value at 0 (since null character does not become 0 in ParseUint)
+	addr := uint64(0)
+	if stype != "S5" {
+		addr, err = strconv.ParseUint(line[4:4+addrLen*2], 16, 32)
 		if err != nil {
-			return []byte{}, err
+			return err
+		}
+	}
+	// data
+	data := make([]byte, 0)
+	dataIndexSt := TypeLen*2 + LengthLen*2 + addrLen*2
+	dataIndexEd := (TypeLen*2 + LengthLen*2) + (int(dataLen)*2 - CSumLen*2)
+	for i := dataIndexSt; i < dataIndexEd; i += 2 {
+		var b uint64
+		b, err = strconv.ParseUint(line[i:i+2], 16, 32)
+		if err != nil {
+			return err
 		}
 		data = append(data, byte(b))
 	}
-	return data, nil
-}
-
-func getChecksum(srectype string, sl []string) (uint8, error) {
-	dataLenAsStr, err := getDataLenAsStr(sl)
+	// checksum
+	cSumIndexSt := TypeLen*2 + LengthLen*2 + dataLen*2 - CSumLen*2
+	cSumIndexEd := TypeLen*2 + LengthLen*2 + dataLen*2
+	csum, err := strconv.ParseUint(line[cSumIndexSt:cSumIndexEd], 16, 32)
 	if err != nil {
-		return 0, err
+		return err
 	}
-
-	CSumIndexSt := TypeFieldStrLen + LengthFieldStrLen + dataLenAsStr - CSumFieldStrLen
-	CSumIndexEd := TypeFieldStrLen + LengthFieldStrLen + dataLenAsStr
-	csum, err := strconv.ParseUint(strings.Join(sl[CSumIndexSt:CSumIndexEd], ""), 16, 32)
-	if err != nil {
-		return 0, err
-	}
-	return byte(csum), nil
-}
-
-func (sr *Srec) isDataRecordExists() error {
-	if len(sr.dataRecords) == 0 {
-		return fmt.Errorf("byte data is empty. srec file doesn't have S1~3 records.")
-	}
+	rec.Srectype = stype
+	rec.Length = uint8(dataLen)
+	rec.Address = uint32(addr)
+	rec.Data = data
+	rec.Checksum = uint8(csum)
 	return nil
 }
 
-func (sr *Srec) isAddrAcending() error {
-	var prevAddr uint32
-	for i, brec := range sr.dataRecords {
-		if i == 0 {
-			continue
-		}
-		if brec.address < prevAddr {
-			return fmt.Errorf("Address is not acending order.")
-		}
-		prevAddr = brec.address
+// EndAddr returns the record's end address from the records of the Srec object
+// Since the end address of the S record is (address of the last record + data length -1), 1 is subtracted
+// Please be aware that processing costs are high as it traverses the entire object
+func (srs *Srec) EndAddr() uint32 {
+	if len(srs.Records) == 0 {
+		return 0
 	}
-	return nil
-}
-
-func getStartAddr(sr *Srec) uint32 {
-	return sr.dataRecords[0].address
-}
-
-func getEndAddr(sr *Srec) uint32 {
-	return sr.dataRecords[len(sr.dataRecords)-1].address
-}
-
-func getLastRecordDataLen(sr *Srec) uint8 {
-	len := len(sr.dataRecords[len(sr.dataRecords)-1].data)
-	return uint8(len)
-}
-
-func (sr *Srec) addBlankRecord() error {
-	size := len(sr.dataRecords)
-	for i := 0; i < size; i++ {
-		if i == size-1 {
-			break
-		}
-		if sr.dataRecords[i].isBlank {
-			continue
-		}
-		cr := sr.dataRecords[i]
-		nr := sr.dataRecords[i+1]
-		blankSize := (nr.address) - (cr.address + uint32(len(cr.data)))
-		if blankSize != 0 {
-			addr := cr.address + uint32(len(cr.data))
-			for blankSize != 0 {
-				dataSize := uint32(16)
-				if blankSize < 16 {
-					dataSize = blankSize
-				}
-				r, err := makeBlankRecord(cr.srectype, addr, dataSize)
-				if err != nil {
-					return err
-				}
-				sr.dataRecords = append(sr.dataRecords[:i+2], sr.dataRecords[i+1:]...)
-				sr.dataRecords[i+1] = r
-				blankSize -= dataSize
-				addr += dataSize
-				i++
+	max := uint32(0x00000000)
+	dLen := uint32(0)
+	for _, r := range srs.Records {
+		switch r.Srectype {
+		case "S1", "S2", "S3":
+			if r.Address > max {
+				max = r.Address
+				dLen = uint32(len(r.Data))
 			}
-			size = len(sr.dataRecords)
 		}
 	}
-	return nil
+	return max + dLen - 1
 }
 
-func makeBlankRecord(srectype string, addr uint32, dataSize uint32) (*dataRecord, error) {
-	r := newDataRecord()
-	r.srectype = srectype
-	l, err := getAddrLenAsStr(srectype)
+// MakeRec creates and returns a new Record object from the argument information
+func MakeRec(srectype string, addr uint32, data []byte) (*Record, error) {
+	r := newRecord()
+	r.Srectype = srectype
+	// Since EndAddress is calculated based on Address and Data, it is set before checking whether to convert
+	r.Address = addr
+	r.Data = data
+	switch r.Srectype {
+	case "S1", "S2":
+		if r.EndAddress() > maxSizeOfS1Addr {
+			r.Srectype = "S2"
+		}
+		if r.EndAddress() > maxSizeOfS2Addr {
+			r.Srectype = "S3"
+		}
+	default:
+	}
+	// Checksum, Length operation depends on srectype, so calculate them after it is fixed
+	l, err := getAddrLen(r.Srectype)
 	if err != nil {
 		return nil, err
 	}
-	r.length = uint8(l) + uint8(dataSize*2)
-	r.address = addr
-	for i := 0; i < int(dataSize); i++ {
-		r.data = append(r.data, 0xFF)
-	}
-	r.checksum, err = calcChecksum(r.srectype, r.length, r.address, r.data)
+	r.Length = uint8(l) + uint8(len(data)) + CSumLen
+	r.Checksum, err = CalcChecksum(r.Srectype, r.Length, r.Address, r.Data)
 	if err != nil {
 		return nil, err
 	}
-	r.isBlank = true
 	return r, nil
 }
 
-func (sr *Srec) makePaddedBytes(startAddr uint32, endAddr uint32, lastRecordDataLen uint8) error {
-	size := (endAddr - startAddr) + uint32(lastRecordDataLen)
-	for i := 0; i < int(size); i++ {
-		sr.dataBytes = append(sr.dataBytes, 0xFF)
+// scanLinesCustom is a splitFunc corresponding to all line feed codes of CRLF, LF, CR
+func scanLinesCustom(data []byte, atEOF bool) (advance int, token []byte, err error) {
+	if atEOF && len(data) == 0 {
+		return 0, nil, nil
 	}
-
-	ofst := int(startAddr)
-	for _, brcs := range sr.dataRecords {
-		for i := 0; i < len(brcs.data); i++ {
-			if (brcs.address < sr.startAddress) || (brcs.address > sr.endAddress) {
-				return fmt.Errorf("data address 0x%08X is out of srec range.", brcs.address)
-			}
-			sr.dataBytes[(int(brcs.address)-ofst)+i] = brcs.data[i]
+	i, j := bytes.IndexByte(data, '\n'), bytes.IndexByte(data, '\r')
+	if i < j {
+		// if LF
+		if i >= 0 {
+			return i + 1, data[0:i], nil
 		}
+		// if CRLF
+		if j < len(data)-1 && isLF(data[j+1]) {
+			return j + 2, data[0:j], nil
+		}
+		// if CR
+		return j + 1, data[0:j], nil
+	} else if j < i {
+		if j >= 0 {
+			// if CRLF
+			if j < len(data)-1 && isLF(data[j+1]) {
+				return j + 2, data[0:j], nil
+			}
+			// if CR
+			return j + 1, data[0:j], nil
+		}
+		// if LF
+		return i + 1, data[0:i], nil
+	} else {
+		// this case is only "i == -1 && j == -1"
 	}
-	return nil
+	// If we're at EOF, we have a final, non-terminated line. Return it.
+	if atEOF {
+		return len(data), data, nil
+	}
+	// Request more data.
+	return 0, nil, nil
+}
+
+// isLF returns weather b is LF
+func isLF(b byte) bool {
+	if b == '\n' {
+		return true
+	}
+	return false
 }
