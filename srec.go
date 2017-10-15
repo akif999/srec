@@ -101,7 +101,7 @@ func CalcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, 
 	case "S3", "S7":
 		bytes = append(bytes, byte((addr&0xFF000000)>>24), byte((addr&0x00FF0000)>>16), byte((addr&0x0000FF00)>>8), byte((addr&0x000000FF))>>0)
 	case "S5":
-		// S5はアドレス部がないため、それをbytesに加えない
+		// Since S5 has no address part, it is not added to bytes
 	default:
 		return 0, fmt.Errorf("%s is invalid srectype", srectype)
 	}
@@ -143,7 +143,7 @@ func (srs *Srec) Parse(fileReader io.Reader) error {
 func (rec *Record) getRecordFields(line string) error {
 	// srectype
 	stype := line[:2]
-	// srectypeに応じて、addressのフィールドの長さを取得しておく
+	// Acquire the length of the field of address according to srectype
 	addrLen, err := getAddrLen(line[:2])
 	if err != nil {
 		return err
