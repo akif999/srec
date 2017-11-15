@@ -79,19 +79,19 @@ func getAddrLen(srectype string) (int, error) {
 	}
 }
 
-// CalcChecksum calculates the checksum value of the record from the information of the arguments
-func (rec *Record) CalcChecksum() (uint8, error) {
-	return CalcChecksum(rec.Srectype, rec.Length, rec.Address, rec.Data)
-}
-
 // EndAddress returns endaddress of the record
 func (rec *Record) EndAddress() uint32 {
 	return rec.Address + uint32(len(rec.Data)) - 1
 }
 
 // CalcChecksum calculates the checksum value of the record from the information of the arguments
+func (rec *Record) CalcChecksum() (uint8, error) {
+	return calcChecksum(rec.Srectype, rec.Length, rec.Address, rec.Data)
+}
+
+// CalcChecksum calculates the checksum value of the record from the information of the arguments
 // S4, S6 are not handled
-func CalcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, error) {
+func calcChecksum(srectype string, len uint8, addr uint32, data []byte) (uint8, error) {
 	bytes := []byte{len}
 	switch srectype {
 	case "S0", "S1", "S9":
@@ -232,7 +232,7 @@ func MakeRec(srectype string, addr uint32, data []byte) (*Record, error) {
 		return nil, err
 	}
 	r.Length = uint8(l) + uint8(len(data)) + CSumLen
-	r.Checksum, err = CalcChecksum(r.Srectype, r.Length, r.Address, r.Data)
+	r.Checksum, err = calcChecksum(r.Srectype, r.Length, r.Address, r.Data)
 	if err != nil {
 		return nil, err
 	}

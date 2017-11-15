@@ -151,7 +151,7 @@ func TestCalcChecksum(t *testing.T) {
 		},
 	}
 	for _, tp := range tests {
-		tp.got, _ = CalcChecksum(tp.srectype, tp.len, tp.addr, tp.data)
+		tp.got, _ = calcChecksum(tp.srectype, tp.len, tp.addr, tp.data)
 		if tp.got != tp.want {
 			t.Errorf(" got : %02X\n         want : %02X", tp.got, tp.want)
 		}
