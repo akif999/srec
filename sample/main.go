@@ -58,7 +58,7 @@ func main() {
 func encryptBytes(plainText []byte, key, iv []byte) ([]byte, error) {
 	// check length of plainText
 	if len(plainText) < aes.BlockSize {
-		return []byte{}, fmt.Errorf("ciphertext too short")
+		return []byte{}, fmt.Errorf("ciphertext is too short")
 	}
 	if len(plainText)%aes.BlockSize != 0 {
 		return []byte{}, fmt.Errorf("ciphertext is not multiple of the block size")
@@ -80,7 +80,7 @@ func encryptBytes(plainText []byte, key, iv []byte) ([]byte, error) {
 func decryptBytes(cipherText []byte, key, iv []byte) ([]byte, error) {
 	// check length of plainText
 	if len(cipherText) < aes.BlockSize {
-		return []byte{}, fmt.Errorf("ciphertext too short")
+		return []byte{}, fmt.Errorf("ciphertext is too short")
 	}
 	if len(cipherText)%aes.BlockSize != 0 {
 		return []byte{}, fmt.Errorf("ciphertext is not multiple of the block size")
