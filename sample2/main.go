@@ -15,8 +15,8 @@ import (
 var (
 	inputFile    = kingpin.Arg("inputFile", "path of input-file(*.mhx)").ExistingFile()
 	outputFile   = kingpin.Arg("outputFile", "name of output-file(*.bin)").String()
-	startAddr    = kingpin.Arg("StartAddr", "address of start encryption").Uint32()
-	sizeOfBlocks = kingpin.Arg("sizeOfBlocks", "Size of blocks of encryption").Uint32()
+	startAddr    = kingpin.Arg("StartAddr", "address of start converting").Uint32()
+	sizeOfBlocks = kingpin.Arg("sizeOfBlocks", "Size of blocks of converting").Uint32()
 )
 
 func main() {
