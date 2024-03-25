@@ -1,178 +1,41 @@
 # srec
+
 A library of Motolola Hex(S Record, *.mot, *mhx) file utilities
 
 ## Usage
-you can use these interfaces :  
-`Bytes()`        -> get bytes from byte slice had srec object  
-`BytesInPart()`  -> get part of bytes from byte slice had srec object by address and size  
-`SetBytes()`     -> set bytes to byte slice had srec object  
-`Update()`       -> update all srec object with byte slice  
-`UpdateInPart()` -> update part of srec object with byte slice by address(start and end)  
-`Format()`       -> return formated string of srec object
 
-you can edit srec, call these:  
-`SetBytes()` -> `Update()` -> `Format()`
+You can use following interfaces :  
+
+```
+// NewSrec returns a new Srec object
+func NewSrec() *Srec {
+// EndAddress returns endaddress of the record
+func (rec *Record) EndAddress() uint32 {
+// CalcChecksum calculates the checksum value of the record from the information of the arguments
+func (rec *Record) CalcChecksum() (uint8, error) {
+// CalcChecksum calculates the checksum value of the record from the information of the arguments
+// S4, S6 are not handled
+func (srs *Srec) Parse(fileReader io.Reader) error {
+func (srs *Srec) EndAddr() uint32 {
+// MakeRec creates and returns a new Record object from the argument information
+func MakeRec(srectype string, addr uint32, data []byte) (*Record, error) {
+```
 
 ## Example
-```go
-package main
 
-import (
-	"fmt"
-	"log"
-	"os"
+See following files:
 
-	"github.com/AKIF999/srec"
-	"gopkg.in/alecthomas/kingpin.v2"
-)
-
-var (
-	filename = kingpin.Arg("Filename", "Srec filename").ExistingFile()
-	setAddr  = kingpin.Arg("SetAddress", "Address of setting Bytes").Uint32()
-	getAddr  = kingpin.Arg("GetAddress", "Address of getting Bytes").Uint32()
-	getSize  = kingpin.Arg("GetSize", "Size of getting Bytes").Uint32()
-)
-
-func main() {
-	sr := srec.NewSrec()
-
-	kingpin.Parse()
-
-	fp, err := os.Open(*filename)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer fp.Close()
-
-	err = sr.ParseFile(fp)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	bt := sr.Bytes()
-	printBytes(bt)
-	fmt.Print("\n")
-
-	b := []byte{}
-	for i := 0; i < 32; i++ {
-		b = append(b, 0x88)
-	}
-	err = sr.SetBytes(*setAddr, b)
-	if err != nil {
-		log.Fatal(err)
-	}
-	bt, err = sr.BytesInPart(*getAddr, *getSize)
-	if err != nil {
-		log.Fatal(err)
-	}
-	printBytes(bt)
-	fmt.Print("\n")
-
-	sr.UpdateInPart(0x00E0, 0x00FF)
-	fs := sr.Format()
-	fmt.Print(fs)
-}
-
-func printBytes(bt []byte) {
-	for i, b := range bt {
-		if i != 0 && i%16 == 0 {
-			fmt.Println()
-		}
-		fmt.Printf("%02X", b)
-	}
-	fmt.Print("\n")
-}
-```
-
-```
-# input file
-S00F00006C65645F746573742E6D6F741E
-S113000000000100000001000000010000000100E8
-S113001000000100000001000000010000000100D8
-S113002000000100000001000000010000000100C8
-S113003000000100000001000000010000000100B8
-S113004000000100000001000000010000000100A8
-S11300500000010000000100000001000000010098
-S11300600000010000000100000001000000010088
-S11300700000010000000100000001000000010078
-S11300800000010000000100000001000000010068
-S11300900000010000000100000001000000010058
-S11300A00000010000000100000001000000010048
-S11300B00000010000000100000001000000010038
-S11300C00000010000000100000001000000010028
-S11300D00000010000000100000001000000010018
-S11300E00000010000000100000001000000010008
-S10700F00000010007
-S11301007A07000FFF0E7A00000001627A01000FE7
-S1130110DF107A02000FDF10690369930B800B81F3
-S11301403AD601006FE3FFFC01006F62FFFC0DAAC9
-S113015046EA01006F62FFFC0B0201006FE2FFFC44
-S105016040E673
-S9030100FB
-```
-
-```
-$./sample input_file 0x00E0 0x00D0 64
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100000001000000010000000100
-00000100FFFFFFFFFFFFFFFFFFFFFFFF
-7A07000FFF0E7A00000001627A01000F
-DF107A02000FDF10690369930B800B81
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
-3AD601006FE3FFFC01006F62FFFC0DAA
-46EA01006F62FFFC0B0201006FE2FFFC
-40E6
-
-00000100000001000000010000000100
-88888888888888888888888888888888
-88888888888888888888888888888888
-7A07000FFF0E7A00000001627A01000F
-
-S00F00006C65645F746573742E6D6F741E
-S113000000000100000001000000010000000100E8
-S113001000000100000001000000010000000100D8
-S113002000000100000001000000010000000100C8
-S113003000000100000001000000010000000100B8
-S113004000000100000001000000010000000100A8
-S11300500000010000000100000001000000010098
-S11300600000010000000100000001000000010088
-S11300700000010000000100000001000000010078
-S11300800000010000000100000001000000010068
-S11300900000010000000100000001000000010058
-S11300A00000010000000100000001000000010048
-S11300B00000010000000100000001000000010038
-S11300C00000010000000100000001000000010028
-S11300D00000010000000100000001000000010018
-S11300E0888888888888888888888888888888888C
-S10700F088888888E8
-S11C00F48888888888888888888888888F
-S11301007A07000FFF0E7A00000001627A01000FE7
-S1130110DF107A02000FDF10690369930B800B81F3
-S11301403AD601006FE3FFFC01006F62FFFC0DAAC9
-S113015046EA01006F62FFFC0B0201006FE2FFFC44
-S105016040E673
-S9030100FB
-```
+[./sample/main.go](./sample/main.go)  
+[./sample2/main.go](./sample2/main.go) 
 
 ## Installation
-`go get github.com/AKIF999/srec`
+
+`go get github.com/akif999/srec`
 
 ## License
+
 MIT
 
 ## Author
-Akifumi Kitabatake(user name is "AKIF" or "AKIF999")
+
+Akifumi Kitabatake(a.k.a akif999)
